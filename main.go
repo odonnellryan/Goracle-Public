@@ -4,7 +4,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	//"html"
 	"log"
 	"net/http"
@@ -17,17 +16,45 @@ type Deployment struct {
 	IpAddress        string
 }
 
+type MethodServerMux struct {
+	muxes map[string]*http.ServeMux
+}
+
+func (h *MethodServerMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.Println("Request '" + r.URL.String() + "'")
+
+	mux := h.muxes[r.Method]
+	if mux == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	mux.ServeHTTP(w, r)
+}
+
+func (h *MethodServerMux) HandleFunc(action string, pattern string, handler func(http.ResponseWriter, *http.Request)) {
+	mux := h.muxes[action]
+	if mux == nil {
+		mux = http.NewServeMux()
+		h.muxes[action] = mux
+	}
+
+	mux.HandleFunc(pattern, handler)
+}
+
+func HandleDeploymentGet(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.URL.Fragment)
+}
+
 func main() {
-	http.HandleFunc("/deployment", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			ip = strings.Split(r.RemoteAddr, ":")[0]
-			containerValues := Deployment{r.FormValue("name"), r.FormValue("package"), r.FormValue("auth")}
-			jsonIze, error := json.Marshal(containerValues)
-			if error != nil {
-				fmt.Fprintf(w, "Error:, %q", error)
-			}
-			w.Write([]byte(jsonIze))
-		}
+	mux := &MethodServerMux{make(map[string]*http.ServeMux)}
+
+	// Add handlers here
+	mux.HandleFunc("GET", "/deployments", HandleDeploymentGet)
+
+	http.Handle("/", func(w http.ResponseWriter, r *http.Request) {
+		r.
 	})
+
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
