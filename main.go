@@ -3,7 +3,7 @@
 package main
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	//"html"
 	"log"
 	"net/http"
@@ -44,6 +44,7 @@ func (h *MethodServerMux) HandleFunc(action string, pattern string, handler func
 
 func HandleDeploymentGet(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL.Fragment)
+	w.Write([]byte("OMG"))
 }
 
 func main() {
@@ -52,9 +53,6 @@ func main() {
 	// Add handlers here
 	mux.HandleFunc("GET", "/deployments", HandleDeploymentGet)
 
-	http.Handle("/", func(w http.ResponseWriter, r *http.Request) {
-		r.
-	})
-
+	http.Handle("/", mux)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
