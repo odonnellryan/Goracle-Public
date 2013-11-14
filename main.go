@@ -35,9 +35,10 @@ func (h *MethodServerMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //idk how i should include this shit >.> ????
 
 var Password = map[string]string{
-	//pass is cleartext but whooocarreeessss
-	//hope github doesn't get backed
-	//attack vectors = numberOfDevs + copiesOfCode
+	// pass is cleartext but whooocarreeessss
+	// hope github doesn't get backed
+	// attack vectors = numberOfDevs + copiesOfCode
+	// RO: I recommend a config file
 	"testuser": "hello",
 }
 
@@ -47,23 +48,23 @@ var ErrorMessages = map[string]string{
 
 var AllowedIPs = map[string]bool{
 	"127.0.0.1": true,
+	"[::1]":     true,
 }
 
 // blame the internet for this
-
-func RequireAuth(w http.ResponseWriter, r *http.Request) {
+func SendMissingCredentialsHeader(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("WWW-Authenticate", `Basic realm="luma.im"`)
 	w.WriteHeader(401)
 	w.Write([]byte("401 Unauthorized\n"))
 }
 
-func CheckAuth(r *http.Request) bool {
-	//gets the auth header and splits it etc.
+func CheckCredentials(r *http.Request) bool {
+	// gets the auth header and splits it etc.
 	authHead := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 	if len(authHead) != 2 || authHead[0] != "Basic" {
 		return false
 	}
-	//gets the decoded stuff
+	// gets the decoded stuff
 	decoded, errr := base64.StdEncoding.DecodeString(authHead[1])
 	if errr != nil {
 		return false
@@ -73,7 +74,8 @@ func CheckAuth(r *http.Request) bool {
 	if len(userPassPair) != 2 {
 		return false
 	}
-	//uhhhh....i think this is a good idea....
+	// uhhhh....i think this is a good idea....
+	// RO: sure why not
 	passwd := Password[userPassPair[0]]
 	if passwd == userPassPair[1] {
 		return true
@@ -84,17 +86,26 @@ func CheckAuth(r *http.Request) bool {
 //wrapper to do IP + http basic authentication ;)
 func AuthorizationRequired(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//split the string thing
-		ipAddress := strings.Split(r.RemoteAddr, ":")
-		if AllowedIPs[ipAddress[0]] {
-			if CheckAuth(r) {
-				h(w, r)
-				return
-			}
-		} else {
+
+		// Format is ip:port. IP may be IPv6 format, e.g. ::1, which uses colons, so find the right most colon
+		portSeperatorIndex := strings.LastIndex(r.RemoteAddr, ":")
+		ipAddress := r.RemoteAddr[0:portSeperatorIndex]
+
+		log.Println("Request from '" + ipAddress + "'")
+
+		if !AllowedIPs[ipAddress] {
+			log.Println("Denied access to '" + ipAddress + "'")
 			http.Error(w, ErrorMessages["addressError"], http.StatusForbidden)
+			return
 		}
-		RequireAuth(w, r)
+
+		if CheckCredentials(r) {
+			h(w, r)
+			return
+		}
+
+		// Send if either credentials are invalid or none set
+		SendMissingCredentialsHeader(w, r)
 	}
 }
 
@@ -108,18 +119,17 @@ func (h *MethodServerMux) HandleFunc(action string, pattern string, handler func
 	mux.HandleFunc(pattern, handler)
 }
 
-var DeploymentRequest = AuthorizationRequired(
-	func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.URL.Fragment)
-		w.Write([]byte("OMG"))
-	},
-)
+func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Deployments and stuff"))
+}
+
+var HandleDeploymentRequestSecure = AuthorizationRequired(HandleDeploymentRequest)
 
 func main() {
 	mux := &MethodServerMux{make(map[string]*http.ServeMux)}
 
 	// Add handlers here
-	mux.HandleFunc("GET", "/deployments", DeploymentRequest)
+	mux.HandleFunc("GET", "/deployments", HandleDeploymentRequestSecure)
 
 	http.Handle("/", mux)
 	log.Fatal(http.ListenAndServe(":8080", nil))
