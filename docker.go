@@ -1,20 +1,24 @@
 // docker.go
 package main
 
+import (
+	//"fmt"
+)
+
 // RO: added some structs and stuff to properly
 // communicate with Docker. Dunno if this is the
 // best way to do this. following: 
 // http://docs.docker.io/en/latest/api/docker_remote_api_v1.6/
 
 type ContainerInfo struct {
-	Id 			string
-    Image 		string
-    Command 	string
-    Created 	int
-    Status 		string
-	Ports 		map[string]string
-	SizeRw 		int
-	SizeRootFs 	int
+	Id 				string
+    Image 			string
+    Command 		string
+    Created 		int
+    Status 			string
+	Ports 			map[string]string
+	SizeRw 			int
+	SizeRootFs 		int
 }
 
 type CreateContainer struct {
@@ -46,7 +50,7 @@ type ExportContainer struct {
 
 type StartContainer struct {
 	Binds			string
-	//docker example: {"lxc.utsname":"docker"}
+	// docker example: {"lxc.utsname":"docker"}
 	LxcConf			map[string]string
 }
 
@@ -79,7 +83,3 @@ type SearchImages {
 	SearchTerm		string
 	Results			string
 }
-
-import (
-	//"fmt"
-)

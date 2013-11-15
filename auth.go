@@ -16,7 +16,7 @@ var AllowedIPs = map[string]bool{
 	"[::1]":     true,
 }
 
-// blame the internet for this
+// blame the internet for this. sends the header asking for http basic
 func SendMissingCredentialsHeader(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("WWW-Authenticate", `Basic realm="luma.im"`)
 	w.WriteHeader(401)
@@ -34,13 +34,11 @@ func CheckCredentials(r *http.Request) bool {
 	if errr != nil {
 		return false
 	}
-	//obvious, maybe.
+	// obvious, maybe.
 	userPassPair := strings.Split(string(decoded), ":")
 	if len(userPassPair) != 2 {
 		return false
 	}
-	// uhhhh....i think this is a good idea....
-	// RO: sure why not
 	passwd := Password[userPassPair[0]]
 	if passwd == userPassPair[1] {
 		return true
@@ -48,11 +46,12 @@ func CheckCredentials(r *http.Request) bool {
 	return false
 }
 
-//wrapper to do IP + http basic authentication ;)
+// wrapper to do IP + http basic authentication ;)
 func AuthorizationRequired(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// Format is ip:port. IP may be IPv6 format, e.g. ::1, which uses colons, so find the right most colon
+		// Format is ip:port. IP may be IPv6 format, e.g. ::1, which uses 
+		// colons, so find the right most colon
 		portSeperatorIndex := strings.LastIndex(r.RemoteAddr, ":")
 		ipAddress := r.RemoteAddr[0:portSeperatorIndex]
 
