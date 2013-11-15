@@ -8,10 +8,6 @@ import (
 )
 
 var Password = map[string]string{
-	// pass is cleartext but whooocarreeessss
-	// hope github doesn't get backed
-	// attack vectors = numberOfDevs + copiesOfCode
-	// RO: I recommend a config file
 	"testuser": "hello",
 }
 
