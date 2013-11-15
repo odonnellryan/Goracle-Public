@@ -14,7 +14,7 @@ type ContainerInfo struct {
 	Id         string
 	Image      string
 	Command    string
-	Created    int
+	Created    string
 	Status     string
 	Ports      map[string]string
 	SizeRw     int
@@ -24,8 +24,8 @@ type ContainerInfo struct {
 type CreateContainer struct {
 	Hostname     string
 	User         string
-	Memory       int
-	MemorySwap   int
+	Memory       string
+	MemorySwap   string
 	AttachStdin  bool
 	AttachStout  bool
 	AttachStderr bool
