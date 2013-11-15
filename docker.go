@@ -63,7 +63,7 @@ type KillContainer struct {
 }
 
 type ListContainers struct {
-	ContainerInfo ContainerInfo
+	ContainerInfoList ContainerInfo
 }
 
 type CreateImageFromChanges {
@@ -72,7 +72,7 @@ type CreateImageFromChanges {
 	Tag				string
 	M 				string
 	Author			string
-	CreateContainer CreateContainer
+	ContainerParams CreateContainer
 }
 
 type SearchImages {
