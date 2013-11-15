@@ -5,10 +5,10 @@ import (
 //"fmt"
 )
 
-// RO: added some structs and stuff to properly
-// communicate with Docker. Dunno if this is the
-// best way to do this. following:
-// http://docs.docker.io/en/latest/api/docker_remote_api_v1.6/
+//
+// RO: added some structs and stuff to properly communicate with Docker. Dunno if this is the
+// best way to do this. following: http://docs.docker.io/en/latest/api/docker_remote_api_v1.6/
+//
 
 type ContainerInfo struct {
 	Id         string
@@ -76,7 +76,9 @@ type CreateImageFromChanges struct {
 	Tag             string
 	M               string
 	Author          string
-	ContainerParams CreateContainer
+	ContainerParams []struct {
+		Params CreateContainer
+	}
 }
 
 type SearchImages struct {

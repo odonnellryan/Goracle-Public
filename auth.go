@@ -1,3 +1,5 @@
+// auth.go handles the auth code for http basic + ip confirmation
+
 package main
 
 import (
@@ -6,15 +8,6 @@ import (
 	"net/http"
 	"strings"
 )
-
-var Password = map[string]string{
-	"testuser": "hello",
-}
-
-var AllowedIPs = map[string]bool{
-	"127.0.0.1": true,
-	"[::1]":     true,
-}
 
 // blame the internet for this. sends the header asking for http basic
 func SendMissingCredentialsHeader(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +43,7 @@ func CheckCredentials(r *http.Request) bool {
 func AuthorizationRequired(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// Format is ip:port. IP may be IPv6 format, e.g. ::1, which uses 
+		// Format is ip:port. IP may be IPv6 format, e.g. ::1, which uses
 		// colons, so find the right most colon
 		portSeperatorIndex := strings.LastIndex(r.RemoteAddr, ":")
 		ipAddress := r.RemoteAddr[0:portSeperatorIndex]
