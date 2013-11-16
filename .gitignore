@@ -2,7 +2,7 @@
 ## Eclipse
 #################
 
-config.go
+[config.go]
 
 *.pydevproject
 .project
