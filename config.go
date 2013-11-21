@@ -1,5 +1,9 @@
 package main
 
+var (
+	repository = "REPO_URL"
+)
+
 var Password = map[string]string{
 	"testuser": "hello",
 }

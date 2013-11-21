@@ -3,6 +3,8 @@ package main
 
 import (
 //"fmt"
+//"strings"
+//"encoding/json"
 )
 
 //
@@ -84,4 +86,8 @@ type CreateImageFromChanges struct {
 type SearchImages struct {
 	SearchTerm string
 	Results    string
+}
+
+func StopContainerRequest() {
+
 }
