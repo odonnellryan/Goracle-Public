@@ -96,7 +96,7 @@ type SearchImages struct {
 
 func DeployNewContainer(d Deployment, w http.ResponseWriter, r *http.Request) string {
 	// create privatekey
-	key, kerror := rsa.GenerateKey(rand.Reader, 1024)
+	key, kerror := rsa.GenerateKey(rand.Reader, 2048)
 	if kerror != nil {
 		log.Println(ErrorMessages["EncodingError"])
 		response := ErrorMessages["EncodingError"]
