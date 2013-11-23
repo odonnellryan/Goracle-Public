@@ -19,10 +19,6 @@ func (h *MethodServerMux) HandleRequest(w http.ResponseWriter, r *http.Request) 
 	mux.ServeHTTP(w, r)
 }
 
-var ErrorMessages = map[string]string{
-	"addressError": "Access denied",
-}
-
 func (h *MethodServerMux) AddHandler(action string, pattern string, handler func(http.ResponseWriter, *http.Request)) {
 	mux := h.muxes[action]
 	if mux == nil {

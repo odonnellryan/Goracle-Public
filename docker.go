@@ -2,9 +2,15 @@
 package main
 
 import (
-//"fmt"
-//"strings"
-//"encoding/json"
+	//"fmt"
+	//"strings"
+	//"encoding/json"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
+	"log"
+	"net/http"
 )
 
 //
@@ -86,6 +92,24 @@ type CreateImageFromChanges struct {
 type SearchImages struct {
 	SearchTerm string
 	Results    string
+}
+
+func DeployNewContainer(d Deployment, w http.ResponseWriter, r *http.Request) string {
+	// create privatekey
+	key, kerror := rsa.GenerateKey(rand.Reader, 1024)
+	if kerror != nil {
+		log.Println(ErrorMessages["EncodingError"])
+		response := ErrorMessages["EncodingError"]
+		return response
+	}
+	// save to pem
+	pemdata := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: x509.MarshalPKCS1PrivateKey(key),
+		},
+	)
+	return string(pemdata)
 }
 
 func StopContainerRequest() {

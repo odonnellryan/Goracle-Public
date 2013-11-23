@@ -1,7 +1,8 @@
 package main
 
 var (
-	repository = "REPO_URL"
+	Repository = "REPO_URL"
+	HostPort   = ":8080"
 )
 
 var Password = map[string]string{

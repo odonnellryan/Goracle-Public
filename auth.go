@@ -17,7 +17,7 @@ func SendMissingCredentialsHeader(w http.ResponseWriter, r *http.Request) {
 }
 
 func CheckCredentials(r *http.Request) bool {
-	// gets the auth header and splits it etc.
+	// gets the auth header bits
 	authHead := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 	if len(authHead) != 2 || authHead[0] != "Basic" {
 		return false
