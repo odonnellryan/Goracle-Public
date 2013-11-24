@@ -4,6 +4,15 @@ package main
 import (
 	//"strings"
 	"encoding/json"
+	// because this was a pain for me, here is the link to things
+	// install in this order
+	// mongodb: http://docs.mongodb.org/manual/tutorial/install-mongodb-on-windows/
+	// bazaar (need this to install mgo, i don't know man...): http://wiki.bazaar.canonical.com/Download
+	// might need the below only if you do the python 2.7 install of bazaar
+	// in that case i put the cert file in c:/Python27/
+	// cacert: http://curl.haxx.se/ca/cacert.pem
+	// mgo: http://labix.org/mgo
+	//woooooo
 	"labix.org/v2/mgo"
 	//"labix.org/v2/mgo/bson"
 	//"log"
@@ -97,34 +106,33 @@ type SearchImages struct {
 
 func DeployNewContainer(d Deployment, w http.ResponseWriter, r *http.Request) string {
 	// mongo db host, set in config.go
-	session, errr := mgo.Dial(MongoDB)
+	session, errr := mgo.Dial(MongoDBAddress)
 	if errr != nil {
 		return (ErrorMessages["DBConnectionError"] + string(errr.Error()))
 	}
-	// create privatekey nsabackdoor
+	// something something cleanup stuff lol
+	defer session.Close()
+	// create privatekey/nsabackdoor
 	key, errr := GenerateKey(w, r)
 	if errr != nil {
 		return (ErrorMessages["EncodingError"] + string(key))
 	}
-	djson, errr := json.Marshal(d)
-	if errr != nil {
-		return (ErrorMessages["EncodingError"] + string(key))
-	}
-	c := session.DB("test").C("deployments")
-	errr = c.Insert(djson)
+	// session for the mongodb thing
+	c := session.DB(MongoDBName).C(MongoDeployCollection)
+	errr = c.Insert(d)
 	if errr != nil {
 		return (ErrorMessages["DBConnectionError"] + string(errr.Error()))
 	}
+
+	// creates slice for all deployments to be returned (can just do one, whatever)
+	// look at docs: http://godoc.org/labix.org/v2/mgo
 	result := []Deployment{}
-
+	// i don't know why they do this like this but they do
 	errr = c.Find(nil).All(&result)
-
 	if errr != nil {
 		return (ErrorMessages["DBConnectionError"] + string(errr.Error()))
 	}
-
 	returnResult, errr := json.Marshal(result)
-
 	if errr != nil {
 		return (ErrorMessages["EncodingError"] + string(key))
 	}
