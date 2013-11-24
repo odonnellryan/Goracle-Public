@@ -16,6 +16,7 @@ import (
 	"labix.org/v2/mgo"
 	//"labix.org/v2/mgo/bson"
 	//"log"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -100,44 +101,70 @@ type SearchImages struct {
 	Results    string
 }
 
+// HTTP client, http basic auth stuff
+
+func DockerHTTPClient(d Deployment, u string) []byte {
+	client := &http.Client{}
+	response, errr := client.Get(DockerHost)
+	if errr != nil {
+		return []byte(errr.Error())
+	}
+	defer response.Body.Close()
+	request, errr := http.NewRequest("GET", (DockerHost + u), nil)
+	// do some error checking jesus fucking christ
+	request.SetBasicAuth(DockerUser, DockerPass)
+	response, errr = client.Do(request)
+	res, errr := ioutil.ReadAll(response.Body)
+
+	return []byte(res)
+}
+
 //
 // for deployments of any *new* container
 //
 
-func DeployNewContainer(d Deployment, w http.ResponseWriter, r *http.Request) string {
+type Deployment struct {
+	Username      string
+	ContainerName string
+	Image         string
+	Memory        string
+	Hostname      string
+	Cmd           string
+}
+
+func DeployNewContainer(d Deployment, r *http.Request) []byte {
 	// mongo db host, set in config.go
 	session, errr := mgo.Dial(MongoDBAddress)
 	if errr != nil {
-		return (ErrorMessages["DBConnectionError"] + string(errr.Error()))
+		return []byte(ErrorMessages["DBConnectionError"] + string(errr.Error()))
 	}
 	// something something cleanup stuff lol
 	defer session.Close()
 	// create privatekey/nsabackdoor
-	key, errr := GenerateKey(w, r)
+	key, errr := GenerateKey(r)
 	if errr != nil {
-		return (ErrorMessages["EncodingError"] + string(key))
+		return []byte(ErrorMessages["EncodingError"] + /*using key var remove*/ string(key))
 	}
 	// session for the mongodb thing
 	c := session.DB(MongoDBName).C(MongoDeployCollection)
 	errr = c.Insert(d)
 	if errr != nil {
-		return (ErrorMessages["DBConnectionError"] + string(errr.Error()))
+		return []byte(ErrorMessages["DBConnectionError"] + string(errr.Error()))
 	}
-
-	// creates slice for all deployments to be returned (can just do one, whatever)
+	// creates slice for All() deployments to be returned (can just do One(), whatever)
 	// look at docs: http://godoc.org/labix.org/v2/mgo
 	result := []Deployment{}
 	// i don't know why they do this like this but they do
 	errr = c.Find(nil).All(&result)
 	if errr != nil {
-		return (ErrorMessages["DBConnectionError"] + string(errr.Error()))
+		return []byte(ErrorMessages["DBConnectionError"] + string(errr.Error()))
 	}
 	returnResult, errr := json.Marshal(result)
 	if errr != nil {
-		return (ErrorMessages["EncodingError"] + string(key))
+		return []byte(ErrorMessages["EncodingError"] + string(key))
 	}
 
-	return string(returnResult)
+	return []byte(returnResult)
 
 }
 

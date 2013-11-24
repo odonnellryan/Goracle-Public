@@ -8,15 +8,6 @@ import (
 	"strings"
 )
 
-type Deployment struct {
-	Username      string
-	ContainerName string
-	Image         string
-	Memory        string
-	Hostname      string
-	Cmd           string
-}
-
 func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 
 	// request will be structured as such:
@@ -41,7 +32,7 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		r.FormValue("cmd"),
 	}
 
-	response := DeployNewContainer(d, w, r)
+	response := DeployNewContainer(d, r)
 
 	//testing! works kinda
 

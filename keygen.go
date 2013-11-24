@@ -13,11 +13,11 @@ import (
 	"net/http"
 )
 
-func GenerateKey(w http.ResponseWriter, r *http.Request) (string, error) {
+func GenerateKey(r *http.Request) (string, error) {
 	key, kerror := rsa.GenerateKey(rand.Reader, 2048)
 	if kerror != nil {
 		log.Println(ErrorMessages["EncodingError"])
-		return ErrorMessages["EncodingError"], errors.New(ErrorMessages["EncodingError"])
+		return "", errors.New(ErrorMessages["EncodingError"])
 	}
 	// save to pem
 	pemdata := pem.EncodeToMemory(
