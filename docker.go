@@ -2,9 +2,11 @@
 package main
 
 import (
-	//"fmt"
 	//"strings"
-	//"encoding/json"
+	"encoding/json"
+	"labix.org/v2/mgo"
+	//"labix.org/v2/mgo/bson"
+	//"log"
 	"net/http"
 )
 
@@ -89,15 +91,46 @@ type SearchImages struct {
 	Results    string
 }
 
+//
+// for deployments of any *new* container
+//
+
 func DeployNewContainer(d Deployment, w http.ResponseWriter, r *http.Request) string {
-	// create privatekey
+	// mongo db host, set in config.go
+	session, errr := mgo.Dial(MongoDB)
+	if errr != nil {
+		return (ErrorMessages["DBConnectionError"] + string(errr.Error()))
+	}
+	// create privatekey nsabackdoor
 	key, errr := GenerateKey(w, r)
+	if errr != nil {
+		return (ErrorMessages["EncodingError"] + string(key))
+	}
+	djson, errr := json.Marshal(d)
+	if errr != nil {
+		return (ErrorMessages["EncodingError"] + string(key))
+	}
+	c := session.DB("test").C("deployments")
+	errr = c.Insert(djson)
+	if errr != nil {
+		return (ErrorMessages["DBConnectionError"] + string(errr.Error()))
+	}
+	result := []Deployment{}
+
+	errr = c.Find(nil).All(&result)
 
 	if errr != nil {
-		return ErrorMessages["EncodingError"]
+		return (ErrorMessages["DBConnectionError"] + string(errr.Error()))
 	}
 
-	return string(key)
+	returnResult, errr := json.Marshal(result)
+
+	if errr != nil {
+		return (ErrorMessages["EncodingError"] + string(key))
+	}
+
+	return string(returnResult)
+
 }
 
 func StopContainerRequest() {

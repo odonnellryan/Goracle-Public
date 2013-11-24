@@ -2,6 +2,7 @@ package main
 
 import (
 	//"io"
+	//"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -21,7 +22,7 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 	// request will be structured as such:
 	// /deployments/{user_name}/{request_server}/{container_name}/{image}/{GET_Params}
 	// {GET_Params} (so far...): memory=(string), hostname=(string), cmd=(string)
-	// C: deployments/test/server/container/image/?memory=test&host=host&cmd=cmd
+	// C: deployments/test/server/container/image/?memory=test&hostname=host&cmd=cmd
 	Url := strings.Split(r.URL.Path, "/")
 
 	// ideally, things in the PATH and POST should be REQUIRED and GET values should
@@ -43,6 +44,7 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 	response := DeployNewContainer(d, w, r)
 
 	//testing! works kinda
+
 	w.Write([]byte(response))
 
 }
