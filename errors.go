@@ -10,3 +10,7 @@ var ErrorMessages = map[string]string{
 	"addressError":      "Access denied",
 	"DBConnectionError": "Can not access database",
 }
+
+var Messages = map[string]string{
+	"DeploymentSuccess": "Deployment successful!",
+}

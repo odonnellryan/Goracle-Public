@@ -3,20 +3,8 @@ package main
 
 import (
 	//"strings"
-	"encoding/json"
-	// because this was a pain for me, here is the link to things
-	// install in this order
-	// mongodb: http://docs.mongodb.org/manual/tutorial/install-mongodb-on-windows/
-	// bazaar (need this to install mgo, i don't know man...): http://wiki.bazaar.canonical.com/Download
-	// might need the below only if you do the python 2.7 install of bazaar
-	// in that case i put the cert file in c:/Python27/
-	// cacert: http://curl.haxx.se/ca/cacert.pem
-	// mgo: http://labix.org/mgo
-	//woooooo
-	"labix.org/v2/mgo"
-	//"labix.org/v2/mgo/bson"
-	//"log"
 	"io/ioutil"
+	//"log"
 	"net/http"
 )
 
@@ -103,20 +91,29 @@ type SearchImages struct {
 
 // HTTP client, http basic auth stuff
 
-func DockerHTTPClient(d Deployment, u string) []byte {
+func DockerHTTPClient(d Deployment, u string) ([]byte, error) {
 	client := &http.Client{}
 	response, errr := client.Get(DockerHost)
 	if errr != nil {
-		return []byte(errr.Error())
+		return nil, errr
 	}
+	// closes the connection
 	defer response.Body.Close()
 	request, errr := http.NewRequest("GET", (DockerHost + u), nil)
+	if errr != nil {
+		return nil, errr
+	}
 	// do some error checking jesus fucking christ
 	request.SetBasicAuth(DockerUser, DockerPass)
 	response, errr = client.Do(request)
+	if errr != nil {
+		return nil, errr
+	}
 	res, errr := ioutil.ReadAll(response.Body)
-
-	return []byte(res)
+	if errr != nil {
+		return nil, errr
+	}
+	return []byte(res), nil
 }
 
 //
@@ -133,38 +130,20 @@ type Deployment struct {
 }
 
 func DeployNewContainer(d Deployment, r *http.Request) []byte {
-	// mongo db host, set in config.go
-	session, errr := mgo.Dial(MongoDBAddress)
-	if errr != nil {
-		return []byte(ErrorMessages["DBConnectionError"] + string(errr.Error()))
-	}
-	// something something cleanup stuff lol
-	defer session.Close()
+
 	// create privatekey/nsabackdoor
 	key, errr := GenerateKey(r)
 	if errr != nil {
-		return []byte(ErrorMessages["EncodingError"] + /*using key var remove*/ string(key))
+		return []byte(ErrorMessages["EncodingError"])
 	}
-	// session for the mongodb thing
-	c := session.DB(MongoDBName).C(MongoDeployCollection)
-	errr = c.Insert(d)
-	if errr != nil {
-		return []byte(ErrorMessages["DBConnectionError"] + string(errr.Error()))
-	}
-	// creates slice for All() deployments to be returned (can just do One(), whatever)
-	// look at docs: http://godoc.org/labix.org/v2/mgo
-	result := []Deployment{}
-	// i don't know why they do this like this but they do
-	errr = c.Find(nil).All(&result)
-	if errr != nil {
-		return []byte(ErrorMessages["DBConnectionError"] + string(errr.Error()))
-	}
-	returnResult, errr := json.Marshal(result)
-	if errr != nil {
-		return []byte(ErrorMessages["EncodingError"] + string(key))
-	}
+	if key != "" {
 
-	return []byte(returnResult)
+	}
+	returnResult := WriteToDatabase("deployments", d)
+	if returnResult != nil {
+		return []byte(ErrorMessages["EncodingError"] + returnResult.Error())
+	}
+	return []byte(Messages["DeploymentSuccess"])
 
 }
 
