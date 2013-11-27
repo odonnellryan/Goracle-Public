@@ -31,16 +31,16 @@ func WriteToDatabase(c string, d interface{}) error {
 	//
 
 	// mongo db host, set in config.go
-	session, errr := mgo.Dial(MongoDBAddress)
-	if errr != nil {
-		return errr
+	session, err := mgo.Dial(MongoDBAddress)
+	if err != nil {
+		return err
 	}
 	// something something cleanup stuff
 	defer session.Close()
 	container := session.DB(MongoDBName).C(c)
-	errr = container.Insert(d)
-	if errr != nil {
-		return errr
+	err = container.Insert(d)
+	if err != nil {
+		return err
 	}
 	return nil
 }

@@ -93,25 +93,25 @@ type SearchImages struct {
 
 func DockerHTTPClient(d Deployment, u string) ([]byte, error) {
 	client := &http.Client{}
-	response, errr := client.Get(DockerHost)
-	if errr != nil {
-		return nil, errr
+	response, err := client.Get(DockerHost)
+	if err != nil {
+		return nil, err
 	}
 	// closes the connection
 	defer response.Body.Close()
-	request, errr := http.NewRequest("GET", (DockerHost + u), nil)
-	if errr != nil {
-		return nil, errr
+	request, err := http.NewRequest("GET", (DockerHost + u), nil)
+	if err != nil {
+		return nil, err
 	}
 	// do some error checking jesus fucking christ
 	request.SetBasicAuth(DockerUser, DockerPass)
-	response, errr = client.Do(request)
-	if errr != nil {
-		return nil, errr
+	response, err = client.Do(request)
+	if err != nil {
+		return nil, err
 	}
 	res, errr := ioutil.ReadAll(response.Body)
-	if errr != nil {
-		return nil, errr
+	if err != nil {
+		return nil, err
 	}
 	return []byte(res), nil
 }
@@ -132,8 +132,8 @@ type Deployment struct {
 func DeployNewContainer(d Deployment, r *http.Request) []byte {
 
 	// create privatekey/nsabackdoor
-	key, errr := GenerateKey(r)
-	if errr != nil {
+	key, err := GenerateKey(r)
+	if err != nil {
 		return []byte(ErrorMessages["EncodingError"])
 	}
 	if key != "" {
