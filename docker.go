@@ -109,7 +109,7 @@ func DockerHTTPClient(d Deployment, u string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, errr := ioutil.ReadAll(response.Body)
+	res, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}
