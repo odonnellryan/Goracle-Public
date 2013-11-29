@@ -23,7 +23,7 @@ type DockerDatabaseWrite struct {
 	UserId   string
 }
 
-func WriteToDatabase(c string, d interface{}) error {
+func WriteToDatabase(collectionName string, d interface{}) error {
 
 	//
 	// writes to the database defined in config and the collection defined above (c)
@@ -37,8 +37,8 @@ func WriteToDatabase(c string, d interface{}) error {
 	}
 	// something something cleanup stuff
 	defer session.Close()
-	container := session.DB(MongoDBName).C(c)
-	err = container.Insert(d)
+	collection := session.DB(MongoDBName).C(collectionName)
+	err = collection.Insert(d)
 	if err != nil {
 		return err
 	}
