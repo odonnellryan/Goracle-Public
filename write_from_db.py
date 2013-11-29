@@ -27,7 +27,7 @@ def set_write_check_null(cursor, _file):
         print "Renaming file to: " + n_file
         os.rename(_file, n_file)
         print "Searching in db for: " + search_file[1]
-        cursor.execute("UPDATE configs SET filename = %s, write_check = 0000000000 WHERE filename = %s", (db_write_file[1], search_file[1]))
+        cursor.execute("UPDATE configs SET filename = %s, write_check = 0 WHERE filename = %s", (db_write_file[1], search_file[1]))
         if cursor.rowcount:
             print "Successfully updated DB"
         conn.commit()
