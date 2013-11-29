@@ -12,7 +12,8 @@ except NameError:
 #
 # TODO: please, please fix the fact that this can break if a config breaks but it isn't one of the fiels in the
 # below paths.
-#
+# 
+# ALSO: it only currently runs the write_check_null thing when a new file is added or after it's modified. it's running it too late
 
 file_path = "nginx/"
 
