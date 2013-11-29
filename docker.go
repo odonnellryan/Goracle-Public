@@ -11,6 +11,7 @@ import (
 //
 // RO: added some structs and stuff to properly communicate with Docker. Dunno if this is the
 // best way to do this. following: http://docs.docker.io/en/latest/api/docker_remote_api_v1.6/
+// RO: This is fine.
 //
 
 type ContainerInfo struct {
@@ -90,8 +91,7 @@ type SearchImages struct {
 }
 
 // HTTP client, http basic auth stuff
-
-func DockerHTTPClient(d Deployment, u string) ([]byte, error) {
+func SendDockerCommand(d Deployment, u string) ([]byte, error) {
 	client := &http.Client{}
 	response, err := client.Get(DockerHost)
 	if err != nil {
@@ -103,7 +103,6 @@ func DockerHTTPClient(d Deployment, u string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	// do some error checking jesus fucking christ
 	request.SetBasicAuth(DockerUser, DockerPass)
 	response, err = client.Do(request)
 	if err != nil {
@@ -117,9 +116,8 @@ func DockerHTTPClient(d Deployment, u string) ([]byte, error) {
 }
 
 //
-// for deployments of any *new* container
+// For deployments of any *new* container
 //
-
 type Deployment struct {
 	Username      string
 	ContainerName string

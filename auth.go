@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// blame the internet for this. sends the header asking for http basic
+// Blame the internet for this. sends the header asking for http basic
 func SendMissingCredentialsHeader(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("WWW-Authenticate", `Basic realm="luma.im"`)
 	w.WriteHeader(401)
@@ -17,17 +17,18 @@ func SendMissingCredentialsHeader(w http.ResponseWriter, r *http.Request) {
 }
 
 func CheckCredentials(r *http.Request) bool {
-	// gets the auth header bits
+	// Gets the auth header bits
 	authHead := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 	if len(authHead) != 2 || authHead[0] != "Basic" {
 		return false
 	}
-	// gets the decoded stuff
+
+	// Gets the decoded stuff
 	decoded, errr := base64.StdEncoding.DecodeString(authHead[1])
 	if errr != nil {
 		return false
 	}
-	// obvious, maybe.
+	// Obvious, maybe.
 	userPassPair := strings.Split(string(decoded), ":")
 	if len(userPassPair) != 2 {
 		return false
