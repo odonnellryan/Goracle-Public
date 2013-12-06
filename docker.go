@@ -81,8 +81,8 @@ type CreateImageFromChanges struct {
 	M               string
 	Author          string
 	ContainerParams []struct {
-		Params CreateContainer
-	}
+	Params CreateContainer
+}
 }
 
 type SearchImages struct {

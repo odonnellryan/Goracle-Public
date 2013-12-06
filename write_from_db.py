@@ -4,15 +4,6 @@ import os
 import time
 import subprocess
 
-try:
-    WindowsError
-except NameError:
-    WindowsError = None
-
-#
-# TODO: please, please fix the fact that this can break if a config breaks but it isn't one of the fiels in the
-# below paths.
-#
 
 file_path = "nginx/"
 
@@ -24,17 +15,20 @@ def set_write_check_null(cursor, _file):
         e_file = _file.split(".")
         n_file = ".".join((e_file[0],"ERROR"))
         db_write_file = n_file.split("/")
-        print "Renaming file to: " + n_file
+        print("Renaming file to: " + n_file)
         os.rename(_file, n_file)
-        print "Searching in db for: " + search_file[1]
+        print("Searching in db for: " + search_file[1])
+        #updates file in database
         cursor.execute("UPDATE configs SET filename = %s, write_check = 0 WHERE filename = %s", (db_write_file[1], search_file[1]))
         if cursor.rowcount:
-            print "Successfully updated DB"
+            print ("Successfully updated DB")
         conn.commit()
         conn.close()
     except OperationalError:
-        print "Database Down"
+        print ("Database Down")
         return False
+    except IOError:
+        print ("File Operation Unsuccessful")
 
 def write_file_(_file, content, file_hash, write_check, cursor):
     with open(_file, "w") as f:
@@ -50,19 +44,18 @@ def write_file_(_file, content, file_hash, write_check, cursor):
                            stdout=subprocess.PIPE, 
                            stderr=subprocess.PIPE)
                 out, err = process.communicate()
-                errcode = process.returncode
                 if err:
                     # major error if we can't reload...no configs will reload...
-                    print "Major error - nginx configs not reloading. Error is: " + err
-                    print "Attempting to set config to incorrect..."
+                    print ("Major error - nginx configs not reloading. Error is: " + err)
+                    print ("Attempting to set config to incorrect...")
                     e_file = err.split("/")
                     if (e_file[-2] + "/") == file_path:
                         error_file = ("".join((file_path,e_file[-1]))).split(":")
                         error_file = error_file[0]
-                        print "File with error:" + error_file
+                        print ("File with error:" + error_file)
                         set_write_check_null(cursor, error_file)
                         return False
-            except (ImportError, ReferenceError, WindowsError):
+            except (ImportError, ReferenceError):
                 pass
     return True
 
@@ -92,8 +85,8 @@ def search_and_write():
         conn.commit()
         conn.close()
         time.sleep(1)
-    except OperationalError, e:
-        print 'Server Offline' + str(e)
+    except OperationalError as e:
+        print ("Server Offline" + str(e))
         time.sleep(5)
 
 while True:

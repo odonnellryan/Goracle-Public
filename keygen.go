@@ -21,10 +21,10 @@ func GenerateKey(r *http.Request) (string, error) {
 	}
 	// save to pem
 	pemdata := pem.EncodeToMemory(
-		&pem.Block{
-			Type:  "RSA PRIVATE KEY",
-			Bytes: x509.MarshalPKCS1PrivateKey(key),
-		},
+	&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(key),
+	},
 	)
 	// response, error
 	return string(pemdata), nil

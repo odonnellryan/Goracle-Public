@@ -19,7 +19,7 @@ func (h *RequestDispatcher) HandleRequest(w http.ResponseWriter, r *http.Request
 	mux.ServeHTTP(w, r)
 }
 
-func (h *RequestDispatcher) AddHandler(action string, pattern string, handler func(http.ResponseWriter, *http.Request)) {
+func (h *RequestDispatcher) AddHandler(action string, pattern string, handler func (http.ResponseWriter, *http.Request)) {
 	mux := h.muxes[action]
 	if mux == nil {
 		mux = http.NewServeMux()
