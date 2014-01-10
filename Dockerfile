@@ -1,10 +1,7 @@
 FROM		stackbrew/ubuntu:12.04
 MAINTAINER	Ryan
 
-# Packaged dependencies
-RUN        apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
-      
-        --no-install-recommends
+
 
 # Install Go
 RUN        curl -s https://go.googlecode.com/files/go1.2.src.tar.gz | tar -v -C /usr/local -xz
@@ -19,3 +16,5 @@ WORKDIR		/go/src/Goracle
 
 # Upload source
 ADD	.	/go/src/Goracle
+
+ENTRYPOINT ["make binary"]
