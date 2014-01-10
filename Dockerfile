@@ -4,6 +4,7 @@ MAINTAINER	Ryan
 
 RUN        apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
         curl \
+        build-essential \
         --no-install-recommends
 
 # Install Go
