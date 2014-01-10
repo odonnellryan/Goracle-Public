@@ -17,10 +17,8 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 	// Ideally, things in the PATH and POST should be REQUIRED and GET values should
 	// be optional/return defaults. maybe.
 
-	lUrl := len(Url)
-
 	// Checking...
-	if lUrl != 7 {
+	if len(Url) != 7 {
 		w.Write([]byte(ErrorMessages["UrlError"]))
 		return
 	}
@@ -31,6 +29,8 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := DeployNewContainer(d, r)
+
+	
 
 	// Testing! Works kinda.
 	w.Write([]byte(response))
