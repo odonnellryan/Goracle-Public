@@ -2,10 +2,11 @@ FROM		stackbrew/ubuntu:12.04
 MAINTAINER	Ryan
 
 
-RUN        apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
+RUN     apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
         curl \
         build-essential \
-        --no-install-recommends
+	bzr \
+	--no-install-recommends
 
 # Install Go
 RUN        curl -s https://go.googlecode.com/files/go1.2.src.tar.gz | tar -v -C /usr/local -xz
