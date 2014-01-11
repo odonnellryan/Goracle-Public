@@ -1,0 +1,2 @@
+mongod &
+/opt/goracle/goracle
