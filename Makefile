@@ -8,7 +8,7 @@ binary: build
 	docker run -rm -i -t -v $(CURDIR)/bin:/go/src/Goracle/bin "$(GORACLE_IMAGE)" ./make.sh
 
 images: build
-	docker build images/goracle
-	docker build images/goracle-standalone
+	docker build -t goracle images/goracle
+	docker build -t goracle-standalone images/goracle-standalone
 
 all: binary
