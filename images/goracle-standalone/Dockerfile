@@ -14,6 +14,9 @@ RUN apt-get -y install python-software-properties
 RUN add-apt-repository -y ppa:nginx/stable
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys C300EE8C
 RUN 	apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
+	libmysqlclient-dev \
+	python-pip \ 
+	python-dev \
 	linux-generic \
 	nginx \
 	mongodb-10gen \
@@ -23,4 +26,10 @@ ENV mongo-server localhost
 
 ADD scripts /
 
-ENTRYPOINT /scripts/.start.sh
+RUN mkdir -p /data/db
+RUN /usr/sbin/mysqld & \
+    sleep 10s &&\
+    echo "CREATE DATABASE nginx; GRANT ALL ON *.* TO 'ryan'@'localhost' IDENTIFIED BY 'test' WITH GRANT OPTION; FLUSH PRIVILEGES;" | mysql
+RUN pip install mysql-python
+EXPOSE 6000
+ENTRYPOINT ./start.sh

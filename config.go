@@ -5,7 +5,7 @@ var (
 	DockerHost            = "http://127.0.0.1:8080"
 	DockerUser            = "ryan"
 	DockerPass            = "test"
-	HostPort              = ":8080"
+	HostPort              = ":6000"
 	MongoDBAddress        = "127.0.0.1"
 	MongoDBName           = "test"
 	MongoDeployCollection = "deployments"
