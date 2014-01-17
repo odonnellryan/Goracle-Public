@@ -1,0 +1,1 @@
+docker build -t "Luma Base Image" base
