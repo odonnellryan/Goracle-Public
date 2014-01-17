@@ -39,6 +39,7 @@ type CreateContainer struct {
 	OpenStdin    bool
 	StdinOnce    bool
 	Env          string
+	Param        string
 	Cmd          string
 	Dns          string
 	Image        string
