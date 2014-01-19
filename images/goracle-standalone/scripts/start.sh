@@ -1,9 +1,7 @@
-mv nginx /etc/nginx/sites-enabled/
-mv nginx.conf /etc/nginx/
 printf "ryan:$(openssl passwd -crypt test)\n" >> /etc/nginx/htpassword
 nginx
-usr/bin/mongod & > mongo.log
-mysqld & > mysql.log
-python write_from_db.py & > pywrite.log
-#/opt/goracle/goracle
+mongod > /var/log/mongo.log 2>&1 &
+mysqld > /var/log/mysql.log 2>&1 &
+python write_from_db.py > /var/log/pywrite.log 2>&1 &
+goracle > /var/log/goracle.log 2>&1 &
 /bin/bash

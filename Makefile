@@ -2,7 +2,7 @@ GORACLE_IMAGE := goracle-build
 
 build:
 	docker build -t $(GORACLE_IMAGE) . 
-	mkdir bin & true
+	mkdir -p bin
 
 binary: build
 	docker run -rm -i -t -v $(CURDIR)/bin:/go/src/Goracle/bin "$(GORACLE_IMAGE)" ./make.sh

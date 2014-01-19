@@ -18,12 +18,12 @@ import (
 )
 
 type DockerDatabaseWrite struct {
-	//future
+	// future
 	Username string
 	UserId   string
 }
 
-func WriteToDatabase(collectionName string, d interface{}) error {
+func WriteToGoracleDatabase(collectionName string, d interface{}) error {
 
 	//
 	// writes to the database defined in config and the collection defined above (c)

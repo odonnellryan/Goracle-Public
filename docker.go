@@ -83,7 +83,7 @@ type CreateImageFromChanges struct {
 	Author          string
 	ContainerParams []struct {
 	Params CreateContainer
-}
+    }
 }
 
 type SearchImages struct {
@@ -131,14 +131,7 @@ type Deployment struct {
 func DeployNewContainer(d Deployment, r *http.Request) []byte {
 
 	// create privatekey/nsabackdoor
-	key, err := GenerateKey(r)
-	if err != nil {
-		return []byte(ErrorMessages["EncodingError"])
-	}
-	if key != "" {
-
-	}
-	returnResult := WriteToDatabase("deployments", d)
+	returnResult := WriteToGoracleDatabase("deployments", d)
 	if returnResult != nil {
 		return []byte(ErrorMessages["EncodingError"] + returnResult.Error())
 	}

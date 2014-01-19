@@ -30,8 +30,6 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 
 	response := DeployNewContainer(d, r)
 
-	
-
 	// Testing! Works kinda.
 	w.Write([]byte(response))
 }
@@ -50,4 +48,5 @@ func main() {
 
 	log.Println("Starting")
 	log.Fatal(http.ListenAndServe(HostPort, nil))
+	// flag.Parse()
 }
