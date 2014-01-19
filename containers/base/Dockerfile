@@ -10,7 +10,12 @@ RUN     apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
         git \
         openssh-client \
         openssh-server 
-        
+
+# adds user
+RUN useradd $USERNAME
+RUN echo $PASSWORD | passwd $USERNAME --stdin
+RUN adduser $USERNAME sudo
+
 # adds the start script
 ADD start.sh .
 
