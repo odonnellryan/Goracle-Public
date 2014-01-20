@@ -1,21 +1,25 @@
 package main
 
 var (
-	Repository            = "REPO_URL"
-	DockerHost            = "http://127.0.0.1:8080"
-	DockerUser            = "ryan"
-	DockerPass            = "test"
+	// host port for Goracle
 	HostPort              = ":6000"
 	MongoDBAddress        = "127.0.0.1"
+	MongoDBPort           = "27017"
 	MongoDBName           = "test"
 	MongoDeployCollection = "deployments"
+	NginxDBAddress        = "127.0.0.1"
+	NginxDBPort           = "3306"
+	NginxDBName           = "nginx"
+	NginxDBUser           = "ryan"
+	NginxDBPassword       = "test"
 )
 
-//the below is for this Goracle HTTP server
+// the below is for this Goracle HTTP server
 var Password = map[string]string{
-	"testuser": "hello",
+	"ryan": "test",
 }
 
+// only allow local connections
 var AllowedIPs = map[string]bool{
 	"127.0.0.1": true,
 	"[::1]":     true,

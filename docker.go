@@ -48,31 +48,14 @@ type CreateContainer struct {
 	WorkingDir   string
 }
 
-type ExportContainer struct {
-	ContentType string
-	STREAM      byte
-}
-
 type StartContainer struct {
 	Binds string
 	// docker example: {"lxc.utsname":"docker"}
 	LxcConf map[string]string
 }
 
-type StopContainer struct {
-	Id string
-}
-
-type RestartContainer struct {
-	Id string
-}
-
-type KillContainer struct {
-	Id string
-}
-
 type ListContainers struct {
-	ContainerInfoList ContainerInfo
+	ContainerInfoList []ContainerInfo
 }
 
 type CreateImageFromChanges struct {
@@ -91,20 +74,26 @@ type SearchImages struct {
 	Results    string
 }
 
+type dockerHost struct {
+    host string
+    user string
+    pass string
+}
+
 // HTTP client, http basic auth stuff
-func SendDockerCommand(d Deployment, u string) ([]byte, error) {
+func SendDockerCommand(host dockerHost, d Deployment, u string) ([]byte, error) {
 	client := &http.Client{}
-	response, err := client.Get(DockerHost)
+	response, err := client.Get(host.host)
 	if err != nil {
 		return nil, err
 	}
 	// closes the connection
 	defer response.Body.Close()
-	request, err := http.NewRequest("GET", (DockerHost + u), nil)
+	request, err := http.NewRequest("GET", (host.host + u), nil)
 	if err != nil {
 		return nil, err
 	}
-	request.SetBasicAuth(DockerUser, DockerPass)
+	request.SetBasicAuth(host.user, host.pass)
 	response, err = client.Do(request)
 	if err != nil {
 		return nil, err
@@ -128,15 +117,13 @@ type Deployment struct {
 	Cmd           string
 }
 
-func DeployNewContainer(d Deployment, r *http.Request) []byte {
-
-	// create privatekey/nsabackdoor
+func DeployNewContainer(host *dockerHost, d Deployment, r *http.Request) []byte {
 	returnResult := WriteToGoracleDatabase("deployments", d)
 	if returnResult != nil {
-		return []byte(ErrorMessages["EncodingError"] + returnResult.Error())
+		return []byte(ErrorMessages["EncodingError: "] + returnResult.Error())
 	}
-	return []byte(Messages["DeploymentSuccess"])
 
+	return []byte(Messages["DeploymentSuccess"])
 }
 
 func StopContainerRequest() {

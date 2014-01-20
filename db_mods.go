@@ -14,7 +14,10 @@ import (
 	// mgo: http://labix.org/mgo
 	//woooooo
 	//"labix.org/v2/mgo/bson"
+	"fmt"
 	"labix.org/v2/mgo"
+	_ "github.com/ziutek/mymysql/mysql"
+    _ "github.com/ziutek/mymysql/native" // Native engine
 )
 
 type DockerDatabaseWrite struct {
@@ -44,3 +47,14 @@ func WriteToGoracleDatabase(collectionName string, d interface{}) error {
 	}
 	return nil
 }
+
+func WriteNginxConfig(n NginxConfig) error {
+    db := mysql.New("tcp", "", (NginxDBAddress+NginxDBPort), NginxDBUser, NginxDBPassword, NginxDBName)
+    err := db.Connect()
+    if err != nil {
+        fmt.Println(err)
+    }
+    
+}
+
+
