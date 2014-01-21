@@ -15,7 +15,7 @@ TABLSTRC = """CREATE TABLE IF NOT EXISTS %s (
           `id` int(11) NOT NULL AUTO_INCREMENT,
           `name` varchar(2555) DEFAULT NULL,
           `content` varchar(25555) DEFAULT NULL,
-          `hash` varchar(2555) DEFAULT NULL,
+          `hash` VARCHAR(2555) CHARACTER SET utf8 COLLATE utf8_cs NOT NULL UNIQUE,
           `write` int(11) NOT NULL DEFAULT '0',
            PRIMARY KEY (`id`)
            ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;""" % (TABLNAME)

@@ -4,19 +4,10 @@ package main
 
 import (
 	//"log"
-	// because this was a pain for me, here is the link to things
-	// install in this order
-	// mongodb: http://docs.mongodb.org/manual/tutorial/install-mongodb-on-windows/
-	// bazaar (need this to install mgo, i don't know man...): http://wiki.bazaar.canonical.com/Download
-	// might need the below only if you do the python 2.7 install of bazaar
-	// in that case i put the cert file in c:/Python27/
-	// cacert: http://curl.haxx.se/ca/cacert.pem
-	// mgo: http://labix.org/mgo
-	//woooooo
 	//"labix.org/v2/mgo/bson"
 	"fmt"
 	"labix.org/v2/mgo"
-	_ "github.com/ziutek/mymysql/mysql"
+	"github.com/ziutek/mymysql/mysql"
     _ "github.com/ziutek/mymysql/native" // Native engine
 )
 
@@ -49,12 +40,16 @@ func WriteToGoracleDatabase(collectionName string, d interface{}) error {
 }
 
 func WriteNginxConfig(n NginxConfig) error {
+	
     db := mysql.New("tcp", "", (NginxDBAddress+NginxDBPort), NginxDBUser, NginxDBPassword, NginxDBName)
     err := db.Connect()
     if err != nil {
         fmt.Println(err)
     }
-    
+    defer checkError(db.Close()_
+    stmt, err := db.Prepare("INSERT INTO configs VALUES (name, content, hash, write) (?, ?, ?, ?) ON DUPLICATE KEY UPDATE (name, content, hash, write)=VALUES(name, content, hash, write)")
+	checkError(err)
+    return nil
 }
 
 
