@@ -1,0 +1,51 @@
+FROM jpetazzo/dind
+
+RUN dpkg-divert --local --rename --add /sbin/initctl
+RUN ln -s /bin/true /sbin/initctl
+
+RUN echo "deb http://ppa.launchpad.net/nginx/stable/ubuntu lucid main" > /etc/apt/sources.list.d/nginx-stable-lucid.list
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys C300EE8C
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive
+RUN apt-get install	-yq libmysqlclient-dev
+RUN apt-get install	-yq python-pip 
+RUN apt-get install	-yq python-dev
+RUN apt-get install	-yq libssl-dev 
+RUN apt-get install	-yq libevent-dev
+RUN apt-get install	-yq build-essential
+RUN apt-get install	-yq liblzma-dev
+RUN apt-get install	-yq linux-headers-generic
+RUN apt-get install	-yq nginx
+RUN apt-get install	-yq mysql-server
+RUN apt-get install	-yq mysql-client
+RUN apt-get install	-yq nano
+RUN apt-get install	-yq wget
+RUN apt-get install	-yq git
+RUN apt-get install	-yq net-tools
+
+RUN pip install mysql-python
+
+# registry stuff and generate docker login to local directory
+RUN cd /opt && git clone https://github.com/dotcloud/docker-registry.git
+RUN cd /opt/docker-registry/config 
+RUN cd /opt/docker-registry \
+    && pip install -r requirements.txt  \
+    && gunicorn --access-logfile - --debug -k gevent -b 0.0.0.0:5000 -w 1 wsgi:application \
+    && wrapdocker && docker login localhost:5000 -e="odonnellryanc@gmail.com" -u="ryan" -p="test" \
+    && docker pull ubuntu \
+    && docker tag $(docker images | grep ubuntu | grep latest | awk '{print $3}') localhost:5000/ubuntu \
+    && docker push localhost:5000/ubuntu 
+
+#make mongo directories
+RUN mkdir -p /data/db
+RUN /usr/sbin/mysqld & \
+    sleep 4s &&\
+    echo "CREATE DATABASE nginx; GRANT ALL ON *.* TO 'ryan'@'localhost' IDENTIFIED BY 'test' WITH GRANT OPTION; FLUSH PRIVILEGES;" | mysql
+
+EXPOSE 6000
+ENTRYPOINT /start.sh
+
+ADD bin /usr/local/bin
+ADD scripts /
+ADD nginx/ /etc/
+cp config_sample.yml config.yml
