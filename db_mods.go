@@ -47,7 +47,7 @@ func WriteNginxConfig(n NginxConfig) error {
         fmt.Println(err)
     }
     defer checkError(db.Close()_
-    stmt, err := db.Prepare("INSERT INTO configs VALUES (name, content, hash, write) (?, ?, ?, ?) ON DUPLICATE KEY UPDATE (name, content, hash, write)=VALUES(name, content, hash, write)")
+    stmt, err := db.Prepare("INSERT INTO configs (name, content, write, hash) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE (name, content, write)=VALUES(name, content, write)")
 	checkError(err)
     return nil
 }

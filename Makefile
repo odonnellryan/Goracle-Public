@@ -16,4 +16,7 @@ images: binary
 test: build
 	docker run -rm -i -t -v /root/workspace/Goracle:/go/src/Goracle $(GORACLE_IMAGE) go test
 
+web: build
+	docker build -t goracle-web images/goracle-web
+
 all: binary
