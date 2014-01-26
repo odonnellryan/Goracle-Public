@@ -110,10 +110,10 @@ func SendDockerCommand(host dockerHost, d Deployment, u string) ([]byte, error) 
 //
 type Deployment struct {
 	User      string
-	Hostname string
-	Image         string
-	Memory        string
-	CPU			  string
+	Hostname  string
+	Image     string
+	Memory    string
+	CPU	
 	Cmd           string
 }
 

@@ -29,9 +29,9 @@ RUN pip install pbkdf2
 RUN pip install peewee
 RUN pip install pyzmq
 RUN pip install twilio
-ADD /Neo/SoftLaunch /SoftLaunch
+RUN git clone https://odonnellryan:0okm9ijn@github.com/xutherogue/Neo
 RUN /usr/sbin/mysqld & \
     sleep 4s &&\
-    echo "CREATE DATABASE users; GRANT ALL ON *.* TO 'ryan'@'localhost' IDENTIFIED BY 'test' WITH GRANT OPTION; FLUSH PRIVILEGES;" | mysql && \
-    python SoftLaunch/createtable.py
+    echo "CREATE DATABASE users; GRANT ALL ON *.* TO 'root'@'localhost' IDENTIFIED BY '0okm9ijn' WITH GRANT OPTION; FLUSH PRIVILEGES;" | mysql && \
+    python Neo/SoftLaunch/createtable.py
 
