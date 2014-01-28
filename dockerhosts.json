@@ -1,0 +1,15 @@
+{
+"Host":
+	[{
+		"Hostname": "Hostname1",
+    	"Address": "Address1",
+    	"User": "Username1",
+    	"Password": "Password1"
+	},
+	{
+		"Hostname": "Hostname2",
+	    "Address": "Address2",
+	    "User": "Username2",
+	   	"Password": "Password2"
+	}]
+}

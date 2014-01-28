@@ -8,6 +8,15 @@ import (
 	"strings"
 )
 
+func ReturnDockerHost(w http.ResponseWriter, r *http.Request) {
+	host, err := SelectHost()
+	if err != nil {
+		w.Write(err)
+    	return
+	}
+	w.Write([]byte(host))
+}
+
 func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 	// Request will be structured as such:
 	//      /deployments/{user_name}/{request_server}/{container_name}/{image}/{GET_Params}
@@ -29,15 +38,15 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		r.FormValue("cmd"),
 	}
 
-    host := SelectHost()
+    host, err := SelectHost()
+    if err != nil {
+    	w.Write([]byte(err))
+    	return
+    }
 	response := DeployNewContainer(host, d, r)
 
 	// Testing! Works kinda.
 	w.Write([]byte(response))
-}
-
-func SelectHost() (*dockerHost) {
-    return nil
 }
 
 func ParseMongoEndpoint(endpoint string) (string, string, string, error) {
@@ -85,6 +94,7 @@ func main() {
 
 	// Add handlers here
 	dispatcher.AddHandler("GET", "/deployments/", HandleDeploymentRequest)
+	dispatcher.AddHandler("GET", "/docker_pool/", ReturnDockerHost)
 
 	// Bottom is hit first, then second to last, etc
 	secure := AuthorizationRequired(dispatcher.HandleRequest)

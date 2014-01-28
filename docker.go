@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	//"log"
 	"net/http"
+	"encoding/json"
+	"fmt"
 )
 
 //
@@ -74,26 +76,22 @@ type SearchImages struct {
 	Results    string
 }
 
-type dockerHost struct {
-    host string
-    user string
-    pass string
-}
+// where docker is installed on (probably behind nginx)
 
 // HTTP client, http basic auth stuff
-func SendDockerCommand(host dockerHost, d Deployment, u string) ([]byte, error) {
+func SendDockerCommand(host Host, command string, method string) ([]byte, error) {
 	client := &http.Client{}
-	response, err := client.Get(host.host)
+	response, err := client.Get(host.Address)
 	if err != nil {
 		return nil, err
 	}
 	// closes the connection
 	defer response.Body.Close()
-	request, err := http.NewRequest("GET", (host.host + u), nil)
+	request, err := http.NewRequest(method, (host.Address + command), nil)
 	if err != nil {
 		return nil, err
 	}
-	request.SetBasicAuth(host.user, host.pass)
+	request.SetBasicAuth(host.User, host.Password)
 	response, err = client.Do(request)
 	if err != nil {
 		return nil, err
@@ -106,24 +104,48 @@ func SendDockerCommand(host dockerHost, d Deployment, u string) ([]byte, error) 
 }
 
 //
-// For deployments of any *new* container
+// For all actions taken on containers through the Luma portal.
 //
+
 type Deployment struct {
-	User      string
-	Hostname string
+	User          string
+	Hostname      string
 	Image         string
 	Memory        string
 	CPU			  string
-	Cmd           string
+	Command       string
 }
 
-func DeployNewContainer(host *dockerHost, d Deployment, r *http.Request) []byte {
+func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
 	returnResult := WriteToGoracleDatabase("deployments", d)
 	if returnResult != nil {
 		return []byte(ErrorMessages["EncodingError: "] + returnResult.Error())
 	}
 
 	return []byte(Messages["DeploymentSuccess"])
+}
+
+func SearchForImage(d Deployment, h Host) ([]byte, error) {
+	searchString := "/images/search?term=" + d.Image
+	resp, err := SendDockerCommand(h, searchString, "GET")
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func ListAllContainers(h Host) ([]ContainerInfo, error) {
+	listString := "/containers/json?all=1"
+	containers := &[]ContainerInfo{}
+	resp, err := SendDockerCommand(h, listString, "GET")
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(resp, &containers)
+    if err!= nil {
+        fmt.Println(err)
+    }
+	return *containers, nil
 }
 
 func StopContainerRequest() {
