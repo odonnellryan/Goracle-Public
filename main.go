@@ -11,10 +11,10 @@ import (
 func ReturnDockerHost(w http.ResponseWriter, r *http.Request) {
 	host, err := SelectHost()
 	if err != nil {
-		w.Write(err)
+		w.Write([]byte(fmt.Sprintf("%s", err)))
     	return
 	}
-	w.Write([]byte(host))
+	w.Write([]byte(fmt.Sprintf("%s", host)))
 }
 
 func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
@@ -40,10 +40,10 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 
     host, err := SelectHost()
     if err != nil {
-    	w.Write([]byte(err))
+    	w.Write([]byte(fmt.Sprintf("%s", err)))
     	return
     }
-	response := DeployNewContainer(host, d, r)
+	response := DeployNewContainer(*host, d, r)
 
 	// Testing! Works kinda.
 	w.Write([]byte(response))

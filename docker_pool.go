@@ -4,6 +4,7 @@ import (
 	"os"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	)
 
 type Host struct {
@@ -11,19 +12,21 @@ type Host struct {
 	Address		string
 	User    	string
 	Password   	string
+	Containers	string
 }
 
 type DockerHosts struct {
 	Host []Host
 }
 
-func GetDockerHosts() (dockerHosts, error) {
+func GetDockerHosts() (*DockerHosts, error) {
 	config, err := os.Open("dockerhosts.json")
 	if err != nil {
 		return nil, err
 	}
-	var dockerHosts DockerHosts
-	err = json.Unmarshal(config, &dockerHosts)
+	decoder := json.NewDecoder(config)
+	dockerHosts := &DockerHosts{}
+	decoder.Decode(&dockerHosts)
     if err != nil {
         return nil, err
     }
@@ -31,41 +34,42 @@ func GetDockerHosts() (dockerHosts, error) {
 }
 
 // update a single host entry in mongo to reflect their container count
-func UpdateContainerNumberInHost (host Host) {
-	dockerHosts, err := GetDockerHosts()
+func UpdateContainerNumberInHost(host Host) error {
+	containers, err := ListAllContainers(host)
 	if err != nil {
-        return nil, err
-    }
-	containers, err := ListAllContainers(host))
-	if err != nil {
-    return nil, err
+    return err
 	}
-	// not finished
-	len(containers)
+	host.Containers = strconv.Itoa(len(containers))
+	UpdateContainerCount(host)
+	return nil
 }
 
 // update all host entries in mongo to reflect their container count
-func UpdateTotalContainerNumber(d DockerHosts) {
-	dockerHosts, err := GetDockerHosts()
-	if err != nil {
-        return nil, err
-    }
+func UpdateTotalContainerNumber(d DockerHosts) error {
 	for index := range(d.Host) {
-		containers, err := ListAllContainers(d.Host[index]))
+		containers, err := ListAllContainers(d.Host[index])
 		if err != nil {
-        return nil, err
+        	return err
     	}
-    	// not finished
-    	len(containers)
+    	d.Host[index].Containers = strconv.Itoa(len(containers))
+		UpdateContainerCount(d.Host[index])
+		return nil
 	}
+	return nil
 }
 
-func SelectHost() (Host, error) {
+// implement...
+func SelectHost() (*Host, error) {
 	dockerHosts, err := GetDockerHosts()
 	if err != nil {
         return nil, err
     }
 	for index := range(dockerHosts.Host) {
-		len(ListAllContainers(dockerHosts.Host[index]))
+		containers, err := ListAllContainers(dockerHosts.Host[index])
+		if err != nil {
+        	return nil, err
+    	}
+    	fmt.Sprintf("%s", containers)
 	}
+	return nil,nil
 }
