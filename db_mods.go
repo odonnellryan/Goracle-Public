@@ -17,7 +17,7 @@ type DockerDatabaseWrite struct {
     UserId   string
 }
 
-func WriteToGoracleDatabase(collectionName string, d interface{}) error {
+func LogDeployment(collectionName string, d interface{}) error {
 
     //
     // writes to the database defined in config and the collection defined above (c)

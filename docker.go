@@ -35,6 +35,7 @@ type CreateContainer struct {
 	AttachStdin  bool
 	AttachStout  bool
 	AttachStderr bool
+	CpuShare	 string
 	PortSpecs    string
 	Privileged   bool
 	Tty          bool
@@ -48,6 +49,32 @@ type CreateContainer struct {
 	Volumes      string
 	VolumesFrom  string
 	WorkingDir   string
+}
+
+func BuildDeployment(d Deployment) Deployment {
+	d.Config = CreateContainer{
+		Hostname: d.Config.Hostname,
+		User:		"",
+		Memory:		 d.Memory,
+		MemorySwap:   "0",
+		AttachStdin:  false,
+		AttachStout:  true,
+		AttachStderr: true,
+		CpuShare:	 d.CPU,
+		PortSpecs:    "",
+		Tty:          false,
+		OpenStdin:    false,
+		StdinOnce:   false,
+		Env:          "",
+		Param:        "",
+		Cmd:       d.Command,
+		Dns:          "",
+		Image:        d.Image,
+		Volumes:      "",
+		VolumesFrom:  "",
+		WorkingDir:   "",
+	}
+	return d
 }
 
 type StartContainer struct {
@@ -75,8 +102,6 @@ type SearchImages struct {
 	SearchTerm string
 	Results    string
 }
-
-// where docker is installed on (probably behind nginx)
 
 // HTTP client, http basic auth stuff
 func SendDockerCommand(host Host, command string, method string) ([]byte, error) {
@@ -114,10 +139,11 @@ type Deployment struct {
 	Memory        string
 	CPU			  string
 	Command       string
+	Config		  CreateContainer
 }
 
 func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
-	returnResult := WriteToGoracleDatabase("deployments", d)
+	returnResult := LogDeployment("deployments", d)
 	if returnResult != nil {
 		return []byte(ErrorMessages["EncodingError: "] + returnResult.Error())
 	}
