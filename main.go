@@ -43,7 +43,7 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
     	w.Write([]byte(fmt.Sprintf("%s", err)))
     	return
     }
-	response := DeployNewContainer(*host, d, r)
+	response := DeployNewContainer(host, d, r)
 
 	// Testing! Works kinda.
 	w.Write([]byte(response))

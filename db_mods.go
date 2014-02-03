@@ -63,6 +63,27 @@ func UpdateContainerCount(update Host) error {
     return nil
 }
 
+func GetDockerHostInformation() (DockerHosts, error) {
+
+    //
+    // is used to update the dockerhosts collection. this is used to keep
+    // track of information about various docker hosts.
+    //
+	hosts := DockerHosts{}
+    // mongo db host, set in config.go
+    session, err := mgo.Dial(MongoDBAddress)
+    if err != nil {
+        return hosts, err
+    }
+    defer session.Close()
+    collection := session.DB(MongoDBName).C("dockerhosts")
+    err = collection.Find(nil).All(&hosts)
+    if err != nil {
+        return hosts, err
+    }
+    return hosts, nil
+}
+
 func WriteNginxConfig(n NginxConfig) error {
     db := mysql.New("tcp", "", (NginxDBAddress+NginxDBPort), NginxDBUser, NginxDBPassword, NginxDBName)
     err := db.Connect()

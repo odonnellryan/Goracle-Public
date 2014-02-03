@@ -3,10 +3,12 @@ package main
 var (
 	// host port for Goracle
 	HostPort              = ":6000"
+	// mongo db
 	MongoDBAddress        = "127.0.0.1"
 	MongoDBPort           = "27017"
 	MongoDBName           = "test"
 	MongoDeployCollection = "deployments"
+	// nginx db for configs
 	NginxDBAddress        = "127.0.0.1"
 	NginxDBPort           = "3306"
 	NginxDBName           = "nginx"

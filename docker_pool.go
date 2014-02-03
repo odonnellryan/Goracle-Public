@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 	"encoding/json"
-	"fmt"
+	// "fmt"
 	"strconv"
 	)
 
@@ -59,17 +59,27 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 }
 
 // implement...
-func SelectHost() (*Host, error) {
-	dockerHosts, err := GetDockerHosts()
+func SelectHost() (Host, error) {
+	dockerHosts, err := GetDockerHostInformation()
+	host := Host{}
 	if err != nil {
-        return nil, err
+        return host, err
     }
+    // start super advanced algorithm
+	// ro: don't try to understand this because you won't be able to.
+	// don't even read it.
+	
+	number := dockerHosts.Host[0].Containers
+	hostIndex := 0
+
 	for index := range(dockerHosts.Host) {
-		containers, err := ListAllContainers(dockerHosts.Host[index])
-		if err != nil {
-        	return nil, err
-    	}
-    	fmt.Sprintf("%s", containers)
+		if dockerHosts.Host[index].Containers < number {
+			number = dockerHosts.Host[index].Containers
+			hostIndex = index
+			}
 	}
-	return nil,nil
+	host = dockerHosts.Host[hostIndex]
+	return host, nil
 }
+
+
