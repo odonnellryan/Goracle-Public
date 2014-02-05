@@ -32,17 +32,15 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(ErrorMessages["UrlError"]))
 		return
 	}
-
-	d := Deployment{
-		Url[2], Url[4], Url[5], r.FormValue("memory"), r.FormValue("hostname"),
-		r.FormValue("cmd"),
-	}
-
-    host, err := SelectHost()
+	host, err := SelectHost()
     if err != nil {
     	w.Write([]byte(fmt.Sprintf("%s", err)))
     	return
     }
+	d := Deployment{
+		Url[2], Url[4], Url[5], r.FormValue("memory"), r.FormValue("hostname"),
+		r.FormValue("cmd"), r.FormValue("ip"), host.Address, NginxConfig{}, CreateContainer{},
+	}
 	response := DeployNewContainer(host, d, r)
 
 	// Testing! Works kinda.

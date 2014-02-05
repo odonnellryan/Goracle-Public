@@ -52,6 +52,15 @@ type CreateContainer struct {
 }
 
 func BuildDeployment(d Deployment) Deployment {
+	if d.WebPort != "" {
+		
+		nginxConfig := nginxConfigValues{
+			hostname:		d.Hostname,
+	    	upstreamServer:  d.IP,
+	    	upstreamPort:    d.WebPort,
+		}
+		d.NginxConfig = BuildNginxConfig(nginxConfig)
+	}
 	d.Config = CreateContainer{
 		Hostname: d.Config.Hostname,
 		User:		"",
@@ -74,6 +83,7 @@ func BuildDeployment(d Deployment) Deployment {
 		VolumesFrom:  "",
 		WorkingDir:   "",
 	}
+	
 	return d
 }
 
@@ -139,15 +149,48 @@ type Deployment struct {
 	Memory        string
 	CPU			  string
 	Command       string
+	IP			  string
+	WebPort       string
+	NginxConfig   NginxConfig
 	Config		  CreateContainer
 }
 
 func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
-	returnResult := LogDeployment("deployments", d)
-	if returnResult != nil {
-		return []byte(ErrorMessages["EncodingError: "] + returnResult.Error())
+	
+	//
+	// order of operations:
+	// check if hostname exists
+	// builds the deployment structure and configs
+	// logs deployment struct to mongo, including configs
+	// saves the nginx configuration
+	// updates the container count for that docker host
+	// deploys the container and returns connection information 
+	//
+	exists, err := CheckContainerHostnameExists(d)
+	if err != nil {
+		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
 	}
-
+	if exists {
+		return []byte(ErrorMessages["EncodingError"] + err.Error())
+	}
+	// build the deployment struct
+	d = BuildDeployment(d)
+	// log it locally
+	err = LogDeployment(MongoDeployCollection, d)
+	if err != nil {
+		return []byte(ErrorMessages["EncodingError"] + err.Error())
+	}
+	// writes to the nginx mysql database
+	err = WriteNginxConfig(d.NginxConfig)
+	if err != nil {
+		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
+	}
+	
+	err = UpdateContainerNumberInHost(host)
+	if err != nil {
+		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
+	}
+	
 	return []byte(Messages["DeploymentSuccess"])
 }
 

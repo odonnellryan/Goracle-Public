@@ -4,7 +4,7 @@ package main
 
 import (
     //"log"
-    //"labix.org/v2/mgo/bson"
+    "labix.org/v2/mgo/bson"
     "fmt"
     "labix.org/v2/mgo"
     "github.com/ziutek/mymysql/mysql"
@@ -25,22 +25,27 @@ func LogDeployment(collectionName string, d interface{}) error {
     //
 
     // mongo db host, set in config.go
-    
     session, err := mgo.Dial(MongoDBAddress)
     if err != nil {
         return err
     }
     // something something cleanup stuff
-    
     defer session.Close()
     collection := session.DB(MongoDBName).C(collectionName)
     err = collection.Insert(d)
-    
+    return err
+}
+
+func IncrementContainerCount(update Host) error {
+	session, err := mgo.Dial(MongoDBAddress)
     if err != nil {
         return err
     }
-    return nil
+    defer session.Close()
+    collection := session.DB(MongoDBName).C("dockerhosts")
+	return collection.Update(update.Hostname, bson.M{"$inc": bson.M{"Containers": 1}})
 }
+
 
 func UpdateContainerCount(update Host) error {
 
@@ -57,10 +62,7 @@ func UpdateContainerCount(update Host) error {
     defer session.Close()
     collection := session.DB(MongoDBName).C("dockerhosts")
     _, err = collection.Upsert(update.Hostname, update)
-    if err != nil {
-        return err
-    }
-    return nil
+    return err
 }
 
 func GetDockerHostInformation() (DockerHosts, error) {
@@ -103,6 +105,24 @@ func WriteNginxConfig(n NginxConfig) error {
     	fmt.Println(err)
     }
     return nil
+}
+
+func CheckContainerHostnameExists(d Deployment) (bool, error) {
+	session, err := mgo.Dial(MongoDBAddress)
+    if err != nil {
+        return false, err
+    }
+    defer session.Close()
+    collection := session.DB(MongoDBName).C(MongoDeployCollection)
+    hostname := d.Hostname
+    exists := collection.Find(d.Hostname).One(&hostname)
+    if exists == nil {
+    	return false, nil
+    }
+    if hostname != "" {
+    	return true, nil
+    }
+	return true, nil
 }
 
 
