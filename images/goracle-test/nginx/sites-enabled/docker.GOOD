@@ -1,0 +1,25 @@
+# this requires that you put a htpassword file in the same directory
+# as you put your nginx.conf file
+# generate file with: 
+# printf "USERNAME:$(openssl passwd -crypt PASSWORD)\n" >> htpassword
+
+upstream backend {
+        server unix:///var/run/docker.sock;
+}
+
+server {
+        listen 8888;
+        listen [::]:8888 default_server ipv6only=on;
+        # deny by IP
+        allow 127.0.0.1;
+        deny all;
+        # Make site accessible from http://localhost/
+        server_name localhost 127.0.0.1;
+        auth_basic      "Restricted";
+        auth_basic_user_file htpassword;
+        root /home/ryan/html;
+        location / {
+                index  index.html index.htm;
+                proxy_pass http://backend;
+        }
+}

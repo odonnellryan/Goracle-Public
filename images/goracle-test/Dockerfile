@@ -30,5 +30,6 @@ RUN     DEBIAN_FRONTEND=noninteractive apt-get install -yq \
 # Upload source
 ADD	.	/go/src/Goracle
 ADD scripts /
+ADD nginx /etc/nginx/
 RUN chmod +x /start.sh
 ENTRYPOINT /start.sh
