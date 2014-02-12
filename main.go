@@ -1,8 +1,8 @@
 package main
 
 import (
-    "fmt"
-    "flag"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -12,7 +12,7 @@ func ReturnDockerHost(w http.ResponseWriter, r *http.Request) {
 	host, err := SelectHost()
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
-    	return
+		return
 	}
 	w.Write([]byte(fmt.Sprintf("%s", host)))
 }
@@ -33,10 +33,10 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	host, err := SelectHost()
-    if err != nil {
-    	w.Write([]byte(fmt.Sprintf("%s", err)))
-    	return
-    }
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
 	d := Deployment{
 		Url[2], Url[4], Url[5], r.FormValue("memory"), r.FormValue("hostname"),
 		r.FormValue("cmd"), r.FormValue("ip"), host.Address, NginxConfig{}, CreateContainer{},
@@ -48,45 +48,45 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func ParseMongoEndpoint(endpoint string) (string, string, string, error) {
-    portSeperatorIndex := strings.LastIndex(endpoint, ":")
-    if portSeperatorIndex < 1 {
-        err := fmt.Errorf("Invalid format of mongo endpoint. Correct syntax is host:port/db");
-        return "", "0", "", err
-    }
-    host := endpoint[0:portSeperatorIndex - 1]
-    slashIndex := strings.Index(endpoint, "/")
-    if slashIndex < 1 {
-        err := fmt.Errorf("Invalid format of mongo endpoint. Correct syntax is host:port/db");
-        return "", "0", "", err
-    }
-    port := endpoint[portSeperatorIndex + 1:slashIndex - 1]
-    db := endpoint[slashIndex + 1:]
-    return host, port, db, nil
+	portSeperatorIndex := strings.LastIndex(endpoint, ":")
+	if portSeperatorIndex < 1 {
+		err := fmt.Errorf("Invalid format of mongo endpoint. Correct syntax is host:port/db")
+		return "", "0", "", err
+	}
+	host := endpoint[0 : portSeperatorIndex-1]
+	slashIndex := strings.Index(endpoint, "/")
+	if slashIndex < 1 {
+		err := fmt.Errorf("Invalid format of mongo endpoint. Correct syntax is host:port/db")
+		return "", "0", "", err
+	}
+	port := endpoint[portSeperatorIndex+1 : slashIndex-1]
+	db := endpoint[slashIndex+1:]
+	return host, port, db, nil
 }
 
 func main() {
-    var mongoHost, loadBalancerHost string
-    flag.StringVar(&mongoHost, "mongoserver", "", "")
-    flag.StringVar(&loadBalancerHost, "loadbalancer", "", "")
-    flag.Parse()
+	var mongoHost, loadBalancerHost string
+	flag.StringVar(&mongoHost, "mongoserver", "", "")
+	flag.StringVar(&loadBalancerHost, "loadbalancer", "", "")
+	flag.Parse()
 
-    if mongoHost == "" {
-        fmt.Println("Mongo endpoint not specified.")
-        flag.PrintDefaults()
-        return
-    }
+	if mongoHost == "" {
+		fmt.Println("Mongo endpoint not specified.")
+		flag.PrintDefaults()
+		return
+	}
 
-    if loadBalancerHost == "" {
-        fmt.Println("Load balancer endpoint not specified.")
-        flag.PrintDefaults()
-        return
-    }
+	if loadBalancerHost == "" {
+		fmt.Println("Load balancer endpoint not specified.")
+		flag.PrintDefaults()
+		return
+	}
 
-    var err error
-    MongoDBAddress, MongoDBPort, MongoDBName, err = ParseMongoEndpoint(mongoHost)
-    if err != nil {
-        fmt.Println(err)
-    }
+	var err error
+	MongoDBAddress, MongoDBPort, MongoDBName, err = ParseMongoEndpoint(mongoHost)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	dispatcher := &RequestDispatcher{make(map[string]*http.ServeMux)}
 

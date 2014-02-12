@@ -5,9 +5,9 @@ import (
 	//"strings"
 	"io/ioutil"
 	//"log"
-	"net/http"
 	"encoding/json"
 	"fmt"
+	"net/http"
 )
 
 //
@@ -35,7 +35,7 @@ type CreateContainer struct {
 	AttachStdin  bool
 	AttachStout  bool
 	AttachStderr bool
-	CpuShare	 string
+	CpuShare     string
 	PortSpecs    string
 	Privileged   bool
 	Tty          bool
@@ -53,37 +53,35 @@ type CreateContainer struct {
 
 func BuildDeployment(d Deployment) Deployment {
 	if d.WebPort != "" {
-		
 		nginxConfig := nginxConfigValues{
-			hostname:		d.Hostname,
-	    	upstreamServer:  d.IP,
-	    	upstreamPort:    d.WebPort,
+			hostname:       d.Hostname,
+			upstreamServer: d.IP,
+			upstreamPort:   d.WebPort,
 		}
 		d.NginxConfig = BuildNginxConfig(nginxConfig)
 	}
 	d.Config = CreateContainer{
-		Hostname: d.Config.Hostname,
-		User:		"",
-		Memory:		 d.Memory,
+		Hostname:     d.Config.Hostname,
+		User:         "",
+		Memory:       d.Memory,
 		MemorySwap:   "0",
 		AttachStdin:  false,
 		AttachStout:  true,
 		AttachStderr: true,
-		CpuShare:	 d.CPU,
+		CpuShare:     d.CPU,
 		PortSpecs:    "",
 		Tty:          false,
 		OpenStdin:    false,
-		StdinOnce:   false,
+		StdinOnce:    false,
 		Env:          "",
 		Param:        "",
-		Cmd:       d.Command,
+		Cmd:          d.Command,
 		Dns:          "",
 		Image:        d.Image,
 		Volumes:      "",
 		VolumesFrom:  "",
 		WorkingDir:   "",
 	}
-	
 	return d
 }
 
@@ -104,8 +102,8 @@ type CreateImageFromChanges struct {
 	M               string
 	Author          string
 	ContainerParams []struct {
-	Params CreateContainer
-    }
+		Params CreateContainer
+	}
 }
 
 type SearchImages struct {
@@ -143,20 +141,19 @@ func SendDockerCommand(host Host, command string, method string) ([]byte, error)
 //
 
 type Deployment struct {
-	User          string
-	Hostname      string
-	Image         string
-	Memory        string
-	CPU			  string
-	Command       string
-	IP			  string
-	WebPort       string
-	NginxConfig   NginxConfig
-	Config		  CreateContainer
+	User        string
+	Hostname    string
+	Image       string
+	Memory      string
+	CPU         string
+	Command     string
+	IP          string
+	WebPort     string
+	NginxConfig NginxConfig
+	Config      CreateContainer
 }
 
 func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
-	
 	//
 	// order of operations:
 	// check if hostname exists
@@ -164,7 +161,7 @@ func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
 	// logs deployment struct to mongo, including configs
 	// saves the nginx configuration
 	// updates the container count for that docker host
-	// deploys the container and returns connection information 
+	// deploys the container and returns connection information
 	//
 	exists, err := CheckContainerHostnameExists(d)
 	if err != nil {
@@ -176,7 +173,7 @@ func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
 	// build the deployment struct
 	d = BuildDeployment(d)
 	// log it locally
-	err = LogDeployment(MongoDeployCollection, d)
+	err = MongoInsert(MongoDeployCollection, d)
 	if err != nil {
 		return []byte(ErrorMessages["EncodingError"] + err.Error())
 	}
@@ -185,12 +182,14 @@ func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
 	if err != nil {
 		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
 	}
-	
-	err = UpdateContainerNumberInHost(host)
+	// update container count
+	err = MongoUpsert(MongoDockerHostCollection, host.Hostname, host)
 	if err != nil {
 		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
 	}
-	
+	// make this actually do stuff.
+	SendDockerCommand(host, "command", "method")
+
 	return []byte(Messages["DeploymentSuccess"])
 }
 
@@ -211,9 +210,9 @@ func ListAllContainers(h Host) ([]ContainerInfo, error) {
 		return nil, err
 	}
 	err = json.Unmarshal(resp, &containers)
-    if err!= nil {
-        fmt.Println(err)
-    }
+	if err != nil {
+		fmt.Println(err)
+	}
 	return *containers, nil
 }
 

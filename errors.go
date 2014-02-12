@@ -5,11 +5,12 @@ type ErrorList struct {
 }
 
 var ErrorMessages = map[string]string{
-	"EncodingError":     "There has been a problem with the encoding. ",
-	"UrlError":          "Not all URL parameters filled. ",
-	"addressError":      "Access denied. ",
-	"hostError":		 "Error selecting Docker host. ",
-	"DBConnectionError": "Can not access database. ",
+	"EncodingError":       "There has been a problem with the encoding. ",
+	"UrlError":            "Not all URL parameters filled. ",
+	"addressError":        "Access denied. ",
+	"hostError":           "Error selecting Docker host. ",
+	"DBConnectionError":   "Can not access database. ",
+	"HostNameExistsError": "That hostname seems to be in use. ",
 }
 
 var Messages = map[string]string{

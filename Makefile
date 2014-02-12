@@ -1,4 +1,6 @@
 GORACLE_IMAGE := goracle-build
+GORACLE_STANDALONE_IMAGE := goracle-standalone
+GORACLE_TEST_IMAGE := goracle-test
 
 build:
 	docker build -t $(GORACLE_IMAGE) . 
@@ -11,10 +13,11 @@ images: binary
 	cp -R bin images/goracle/
 	cp -R bin images/goracle-standalone/
 	docker build -t goracle images/goracle
-	docker build -t goracle-standalone images/goracle-standalone
+	docker build -t $(GORACLE_STANDALONE_IMAGE) images/goracle-standalone
 	
 test: build
-	docker run -rm -i -t -v /root/workspace/Goracle:/go/src/Goracle $(GORACLE_IMAGE) go test
+	docker build -t $(GORACLE_TEST_IMAGE) images/goracle-test
+	docker run -i -t -v /root/workspace/Goracle:/go/src/Goracle $(GORACLE_TEST_IMAGE)
 
 web: build
 	docker build -t goracle-web images/goracle-web

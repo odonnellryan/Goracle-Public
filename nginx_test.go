@@ -1,10 +1,10 @@
 package main
 
 import (
-    "testing"
-    )
+	"testing"
+)
 
-var testConfigValues = nginxConfigValues{"hostname", "localhost","9999"}
+var testConfigValues = nginxConfigValues{"hostname", "localhost", "9999"}
 
 // hostname, (upstreamServer + upstreamPort), hostname, hostname
 var testConfigFile = `
@@ -20,15 +20,15 @@ var testConfigFile = `
     }
 `
 
-var testNginxConfig = NginxConfig {
-    "hostname.GOOD",
-    testConfigFile,
-    testConfigValues,
+var testNginxConfig = NginxConfig{
+	"hostname.GOOD",
+	testConfigFile,
+	testConfigValues,
 }
 
 func TestBuildConfig(t *testing.T) {
-    compareConfig := BuildNginxConfig(testConfigValues)
-    if compareConfig != testNginxConfig {
-        t.Errorf("Got %+v, expecting %+v", compareConfig, testNginxConfig)
-    }
+	compareConfig := BuildNginxConfig(testConfigValues)
+	if compareConfig != testNginxConfig {
+		t.Errorf("Got %+v, expecting %+v", compareConfig, testNginxConfig)
+	}
 }

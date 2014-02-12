@@ -1,15 +1,14 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
 )
 
 type nginxConfigValues struct {
-    hostname        string
-    upstreamServer  string
-    upstreamPort    string
+	hostname       string
+	upstreamServer string
+	upstreamPort   string
 }
-
 
 // hostname, (upstreamServer + upstreamPort), hostname, hostname.
 var HttpConfigFile = `
@@ -26,17 +25,15 @@ var HttpConfigFile = `
 `
 
 type NginxConfig struct {
-    // nginx is set to only load *.GOOD
-    configName   string
-    configFile   string
-    configValues nginxConfigValues
+	// nginx is set to only load *.GOOD
+	configName   string
+	configFile   string
+	configValues nginxConfigValues
 }
 
-func BuildNginxConfig (values nginxConfigValues) NginxConfig {
-    config := fmt.Sprintf(HttpConfigFile, values.hostname, (values.upstreamServer+":"+values.upstreamPort), 
-                    values.hostname, values.hostname)
-    // nginx is set to only load *.GOOD
-    return NginxConfig{(values.hostname+".GOOD"), config, values}
+func BuildNginxConfig(values nginxConfigValues) NginxConfig {
+	config := fmt.Sprintf(HttpConfigFile, values.hostname, (values.upstreamServer + ":" + values.upstreamPort),
+		values.hostname, values.hostname)
+	// nginx is set to only load *.GOOD
+	return NginxConfig{(values.hostname + ".GOOD"), config, values}
 }
-
-

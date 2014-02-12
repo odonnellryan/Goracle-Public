@@ -32,8 +32,9 @@ RUN cd /opt && git clone https://github.com/dotcloud/docker-registry.git \
 RUN cd /opt/docker-registry \
     && pip install -r requirements.txt 
 
-#make mongo directories
+# make mongo directories
 RUN mkdir -p /data/db
+# mysql server setup
 RUN /usr/sbin/mysqld & \
     sleep 4s &&\
     echo "CREATE DATABASE nginx; GRANT ALL ON *.* TO 'ryan'@'localhost' IDENTIFIED BY 'test' WITH GRANT OPTION; FLUSH PRIVILEGES;" | mysql

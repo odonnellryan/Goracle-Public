@@ -2,18 +2,20 @@ package main
 
 var (
 	// host port for Goracle
-	HostPort              = ":6000"
+	HostPort = ":6000"
 	// mongo db
-	MongoDBAddress        = "127.0.0.1"
-	MongoDBPort           = "27017"
-	MongoDBName           = "test"
-	MongoDeployCollection = "deployments"
+	MongoDBAddress            = "127.0.0.1"
+	MongoDBPort               = "27017"
+	MongoDBName               = "test"
+	MongoDeployCollection     = "deployments"
+	MongoUserCollection       = "userdata"
+	MongoDockerHostCollection = "dockerhosts"
 	// nginx db for configs
-	NginxDBAddress        = "127.0.0.1"
-	NginxDBPort           = "3306"
-	NginxDBName           = "nginx"
-	NginxDBUser           = "ryan"
-	NginxDBPassword       = "test"
+	NginxDBAddress  = "127.0.0.1"
+	NginxDBPort     = "3306"
+	NginxDBName     = "nginx"
+	NginxDBUser     = "ryan"
+	NginxDBPassword = "test"
 )
 
 // the below is for this Goracle HTTP server

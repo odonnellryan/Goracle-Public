@@ -17,6 +17,7 @@ RUN        cd /usr/local/go/src && ./make.bash --no-clean 2>&1
 
 # Install go dependencies
 RUN go get "labix.org/v2/mgo"
+RUN go get "labix.org/v2/mgo/bson"
 RUN go get "github.com/ziutek/mymysql/thrsafe"
 RUN go get "github.com/ziutek/mymysql/autorc"
 RUN go get "github.com/ziutek/mymysql/godrv"
