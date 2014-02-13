@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"os"
 	// "fmt"
-	"strconv"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
+	"strconv"
 )
 
 type Host struct {
@@ -75,7 +75,6 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 	}
 	return nil
 }
-
 
 // increments the count of a single container config in mongo
 func IncrementContainerCount(update Host) error {

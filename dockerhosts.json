@@ -2,7 +2,7 @@
 "Host":
 	[{
 		"Hostname": "local_testing",
-    	"Address": "127.0.0.1:8888",
+    	"Address": "http://127.0.0.1:8888/",
     	"User": "ryan",
     	"Password": "test"
 	}]

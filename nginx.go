@@ -10,6 +10,16 @@ type nginxConfigValues struct {
 	upstreamPort   string
 }
 
+// eventually, will want this to be the proxy deploy (basically just nginx deployment)
+// if d.WebPort != "" {
+//		nginxConfig := nginxConfigValues{
+//			hostname:       d.Hostname,
+//			upstreamServer: d.IP,
+//			upstreamPort:   d.WebPort,
+//		}
+//		d.NginxConfig = BuildNginxConfig(nginxConfig)
+//	}
+
 // hostname, (upstreamServer + upstreamPort), hostname, hostname.
 var HttpConfigFile = `
     upstream %s  {

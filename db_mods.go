@@ -98,12 +98,12 @@ func CheckContainerHostnameExists(d Deployment) (bool, error) {
 	}
 	defer session.Close()
 	collection := session.DB(MongoDBName).C(MongoDeployCollection)
-	hostname := d.Hostname
-	exists := collection.Find(d.Hostname).One(&hostname)
+	containerName := d.ContainerName
+	exists := collection.Find(d.ContainerName).One(&containerName)
 	if exists == nil {
 		return false, nil
 	}
-	if hostname != "" {
+	if containerName != "" {
 		return true, nil
 	}
 	return true, nil

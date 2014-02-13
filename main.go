@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"strconv"
 )
 
 func ReturnDockerHost(w http.ResponseWriter, r *http.Request) {
@@ -19,27 +20,38 @@ func ReturnDockerHost(w http.ResponseWriter, r *http.Request) {
 
 func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 	// Request will be structured as such:
-	//      /deployments/{user_name}/{request_server}/{container_name}/{image}/{GET_Params}
-	// {GET_Params} (so far...): memory=(string), hostname=(string), cmd=(string)
-	// Ex: deployments/test/server/container/image/?memory=test&hostname=host&cmd=cmd
-	Url := strings.Split(r.URL.Path, "/")
-
-	// Ideally, things in the PATH and POST should be REQUIRED and GET values should
-	// be optional/return defaults. maybe.
-
 	// Checking...
-	if len(Url) != 7 {
-		w.Write([]byte(ErrorMessages["UrlError"]))
-		return
-	}
 	host, err := SelectHost()
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	d := Deployment{
-		Url[2], Url[4], Url[5], r.FormValue("memory"), r.FormValue("hostname"),
-		r.FormValue("cmd"), r.FormValue("ip"), host.Address, NginxConfig{}, CreateContainer{},
+	// convert to int64
+	memory, err := strconv.ParseInt(r.FormValue("memory"), 10, 64)
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
+	memory_swap, err := strconv.ParseInt(r.FormValue("memory_swap"), 10, 64)
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
+	cpu, err := strconv.ParseInt(r.FormValue("cpu"), 10, 64)
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
+	d := Deployment {
+		User:        	r.FormValue("user"),
+		ContainerName:  r.FormValue("container_name"),
+		Image:       	r.FormValue("image"),
+		Memory:      	memory, // number in bytes
+		MemorySwap:	    memory_swap, // number in bytes for memory + swap, -1 for no swap
+		CPU:         	cpu,
+		Command:     	CommaStringToSlice(r.FormValue("command")),
+		IP:          	r.FormValue("ip"),
+		ExposedPorts:   CommaStringToSlice(r.FormValue("exposed_ports")),
 	}
 	response := DeployNewContainer(host, d, r)
 

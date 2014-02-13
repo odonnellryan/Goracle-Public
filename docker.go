@@ -11,15 +11,54 @@ import (
 )
 
 //
-// RO: added some structs and stuff to properly communicate with Docker. Dunno if this is the
-// best way to do this. following: http://docs.docker.io/en/latest/api/docker_remote_api_v1.6/
-// RO: This is fine.
+// For all actions taken on containers through the Luma portal.
 //
+
+type Deployment struct {
+	User        	string
+	ContainerName   string
+	Image       	string
+	Memory      	int64
+	MemorySwap	    int64
+	CPU         	int64
+	Command     	[]string
+	IP          	string
+	ExposedPorts    []string
+	Config      	CreateContainer
+}
+
+type CreateContainer struct {
+	Hostname        string
+	Domainname      string
+	User            string
+	Memory          int64 // Memory limit (in bytes)
+	MemorySwap      int64 // Total memory usage (memory + swap); set `-1' to disable swap
+	CpuShares       int64 // CPU shares (relative weight vs. other containers)
+	AttachStdin     bool
+	AttachStdout    bool
+	AttachStderr    bool
+	PortSpecs       []string // Deprecated - Can be in the format of 8080/tcp
+	ExposedPorts    map[string]struct{} // 80/tcp
+	Tty             bool // Attach standard streams to a tty, including stdin if it is not closed.
+	OpenStdin       bool // Open stdin
+	StdinOnce       bool // If true, close stdin after the 1 attached client disconnects.
+	Env             []string
+	Param           []string
+	Cmd             []string
+	Dns             []string
+	Image           string // Name of the image as it was passed by the operator (eg. could be symbolic)
+	Volumes         map[string]struct{}
+	VolumesFrom     string
+	WorkingDir      string
+	Entrypoint      []string
+	NetworkDisabled bool
+	OnBuild         []string
+}
 
 type ContainerInfo struct {
 	Id         string
 	Image      string
-	Command    string
+	Command    []string
 	Created    string
 	Status     string
 	Ports      map[string]string
@@ -27,88 +66,32 @@ type ContainerInfo struct {
 	SizeRootFs int
 }
 
-type CreateContainer struct {
-	Hostname     string
-	User         string
-	Memory       string
-	MemorySwap   string
-	AttachStdin  bool
-	AttachStout  bool
-	AttachStderr bool
-	CpuShare     string
-	PortSpecs    string
-	Privileged   bool
-	Tty          bool
-	OpenStdin    bool
-	StdinOnce    bool
-	Env          string
-	Param        string
-	Cmd          string
-	Dns          string
-	Image        string
-	Volumes      string
-	VolumesFrom  string
-	WorkingDir   string
-}
+// we aren't deploying containers with an nginx configuration to start. 
+// the user will have to later choose a hostname and initiate a custom domain deployment.
+// deploying the container deploys it using docker's default hostname.
+// so nginx deployment will me its own thing
 
 func BuildDeployment(d Deployment) Deployment {
-	if d.WebPort != "" {
-		nginxConfig := nginxConfigValues{
-			hostname:       d.Hostname,
-			upstreamServer: d.IP,
-			upstreamPort:   d.WebPort,
-		}
-		d.NginxConfig = BuildNginxConfig(nginxConfig)
-	}
 	d.Config = CreateContainer{
-		Hostname:     d.Config.Hostname,
-		User:         "",
-		Memory:       d.Memory,
-		MemorySwap:   "0",
+		Memory:       d.Memory, // Memory limit (in bytes)
+		MemorySwap:   d.MemorySwap, // mem + swap, -1 to disable swap.
 		AttachStdin:  false,
-		AttachStout:  true,
+		AttachStdout: true,
 		AttachStderr: true,
-		CpuShare:     d.CPU,
-		PortSpecs:    "",
-		Tty:          false,
-		OpenStdin:    false,
-		StdinOnce:    false,
-		Env:          "",
-		Param:        "",
+		CpuShares:    d.CPU,
 		Cmd:          d.Command,
-		Dns:          "",
 		Image:        d.Image,
-		Volumes:      "",
-		VolumesFrom:  "",
-		WorkingDir:   "",
+		ExposedPorts: make(map[string]struct{}),
+		Volumes:  	  make(map[string]struct{}),
+	}
+	for index := range d.ExposedPorts {
+		d.Config.ExposedPorts[d.ExposedPorts[index]] = struct{} {}
 	}
 	return d
 }
 
-type StartContainer struct {
-	Binds string
-	// docker example: {"lxc.utsname":"docker"}
-	LxcConf map[string]string
-}
-
 type ListContainers struct {
 	ContainerInfoList []ContainerInfo
-}
-
-type CreateImageFromChanges struct {
-	Container       string
-	Repo            string
-	Tag             string
-	M               string
-	Author          string
-	ContainerParams []struct {
-		Params CreateContainer
-	}
-}
-
-type SearchImages struct {
-	SearchTerm string
-	Results    string
 }
 
 // HTTP client, http basic auth stuff
@@ -136,30 +119,12 @@ func SendDockerCommand(host Host, command string, method string) ([]byte, error)
 	return []byte(res), nil
 }
 
-//
-// For all actions taken on containers through the Luma portal.
-//
-
-type Deployment struct {
-	User        string
-	Hostname    string
-	Image       string
-	Memory      string
-	CPU         string
-	Command     string
-	IP          string
-	WebPort     string
-	NginxConfig NginxConfig
-	Config      CreateContainer
-}
-
 func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
 	//
 	// order of operations:
 	// check if hostname exists
 	// builds the deployment structure and configs
 	// logs deployment struct to mongo, including configs
-	// saves the nginx configuration
 	// updates the container count for that docker host
 	// deploys the container and returns connection information
 	//
@@ -177,11 +142,7 @@ func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
 	if err != nil {
 		return []byte(ErrorMessages["EncodingError"] + err.Error())
 	}
-	// writes to the nginx mysql database
-	err = WriteNginxConfig(d.NginxConfig)
-	if err != nil {
-		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
-	}
+
 	// update container count
 	err = MongoUpsert(MongoDockerHostCollection, host.Hostname, host)
 	if err != nil {
@@ -194,7 +155,7 @@ func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
 }
 
 func SearchForImage(d Deployment, h Host) ([]byte, error) {
-	searchString := "/images/search?term=" + d.Image
+	searchString := "images/search?term=" + d.Image
 	resp, err := SendDockerCommand(h, searchString, "GET")
 	if err != nil {
 		return nil, err
@@ -203,7 +164,7 @@ func SearchForImage(d Deployment, h Host) ([]byte, error) {
 }
 
 func ListAllContainers(h Host) ([]ContainerInfo, error) {
-	listString := "/containers/json?all=1"
+	listString := "containers/json?all=1"
 	containers := &[]ContainerInfo{}
 	resp, err := SendDockerCommand(h, listString, "GET")
 	if err != nil {
