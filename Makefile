@@ -17,7 +17,7 @@ images: binary
 	
 test: build
 	docker build -t $(GORACLE_TEST_IMAGE) images/goracle-test
-	docker run -i -t -v /root/workspace/Goracle:/go/src/Goracle $(GORACLE_TEST_IMAGE)
+	docker run -privileged -i -t -v /root/workspace/Goracle:/go/src/Goracle $(GORACLE_TEST_IMAGE)
 
 web: build
 	docker build -t goracle-web images/goracle-web
