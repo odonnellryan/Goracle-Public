@@ -15,16 +15,16 @@ import (
 //
 
 type Deployment struct {
-	User        	string
-	ContainerName   string
-	Image       	string
-	Memory      	int64
-	MemorySwap	    int64
-	CPU         	int64
-	Command     	[]string
-	IP          	string
-	ExposedPorts    []string
-	Config      	CreateContainer
+	User          string
+	ContainerName string
+	Image         string
+	Memory        int64
+	MemorySwap    int64
+	CPU           int64
+	Command       []string
+	IP            string
+	ExposedPorts  []string
+	Config        CreateContainer
 }
 
 type CreateContainer struct {
@@ -37,11 +37,11 @@ type CreateContainer struct {
 	AttachStdin     bool
 	AttachStdout    bool
 	AttachStderr    bool
-	PortSpecs       []string // Deprecated - Can be in the format of 8080/tcp
+	PortSpecs       []string            // Deprecated - Can be in the format of 8080/tcp
 	ExposedPorts    map[string]struct{} // 80/tcp
-	Tty             bool // Attach standard streams to a tty, including stdin if it is not closed.
-	OpenStdin       bool // Open stdin
-	StdinOnce       bool // If true, close stdin after the 1 attached client disconnects.
+	Tty             bool                // Attach standard streams to a tty, including stdin if it is not closed.
+	OpenStdin       bool                // Open stdin
+	StdinOnce       bool                // If true, close stdin after the 1 attached client disconnects.
 	Env             []string
 	Param           []string
 	Cmd             []string
@@ -66,14 +66,14 @@ type ContainerInfo struct {
 	SizeRootFs int
 }
 
-// we aren't deploying containers with an nginx configuration to start. 
+// we aren't deploying containers with an nginx configuration to start.
 // the user will have to later choose a hostname and initiate a custom domain deployment.
 // deploying the container deploys it using docker's default hostname.
 // so nginx deployment will me its own thing
 
 func BuildDeployment(d Deployment) Deployment {
 	d.Config = CreateContainer{
-		Memory:       d.Memory, // Memory limit (in bytes)
+		Memory:       d.Memory,     // Memory limit (in bytes)
 		MemorySwap:   d.MemorySwap, // mem + swap, -1 to disable swap.
 		AttachStdin:  false,
 		AttachStdout: true,
@@ -82,10 +82,10 @@ func BuildDeployment(d Deployment) Deployment {
 		Cmd:          d.Command,
 		Image:        d.Image,
 		ExposedPorts: make(map[string]struct{}),
-		Volumes:  	  make(map[string]struct{}),
+		Volumes:      make(map[string]struct{}),
 	}
 	for index := range d.ExposedPorts {
-		d.Config.ExposedPorts[d.ExposedPorts[index]] = struct{} {}
+		d.Config.ExposedPorts[d.ExposedPorts[index]] = struct{}{}
 	}
 	return d
 }

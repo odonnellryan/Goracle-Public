@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func ReturnDockerHost(w http.ResponseWriter, r *http.Request) {
@@ -42,16 +42,16 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	d := Deployment {
-		User:        	r.FormValue("user"),
-		ContainerName:  r.FormValue("container_name"),
-		Image:       	r.FormValue("image"),
-		Memory:      	memory, // number in bytes
-		MemorySwap:	    memory_swap, // number in bytes for memory + swap, -1 for no swap
-		CPU:         	cpu,
-		Command:     	CommaStringToSlice(r.FormValue("command")),
-		IP:          	r.FormValue("ip"),
-		ExposedPorts:   CommaStringToSlice(r.FormValue("exposed_ports")),
+	d := Deployment{
+		User:          r.FormValue("user"),
+		ContainerName: r.FormValue("container_name"),
+		Image:         r.FormValue("image"),
+		Memory:        memory,      // number in bytes
+		MemorySwap:    memory_swap, // number in bytes for memory + swap, -1 for no swap
+		CPU:           cpu,
+		Command:       CommaStringToSlice(r.FormValue("command")),
+		IP:            r.FormValue("ip"),
+		ExposedPorts:  CommaStringToSlice(r.FormValue("exposed_ports")),
 	}
 	response := DeployNewContainer(host, d, r)
 

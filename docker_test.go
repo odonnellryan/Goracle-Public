@@ -1,35 +1,35 @@
 package main
 
 import (
-	"testing"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"testing"
 )
 
-var testHost = Host {
+var testHost = Host{
 	Hostname: "local_testing",
-    Address: "http://127.0.0.1:8888/",
-    User: "ryan",
-    Password: "test",
+	Address:  "http://127.0.0.1:8888/",
+	User:     "ryan",
+	Password: "test",
 }
 
-var testDeployment = Deployment {
-	User:             "testUser",
-	ContainerName:    "containerName",
-	Image:            "base",
-	Memory:           2097152,
-	MemorySwap:       -1,
-	CPU:              1,
-	Command:          []string{"/bin/bash"},
-	IP:               "127.0.0.1",
-	ExposedPorts:     []string{"88/tcp","22/tcp"},
+var testDeployment = Deployment{
+	User:          "testUser",
+	ContainerName: "containerName",
+	Image:         "base",
+	Memory:        2097152,
+	MemorySwap:    -1,
+	CPU:           1,
+	Command:       []string{"/bin/bash"},
+	IP:            "127.0.0.1",
+	ExposedPorts:  []string{"88/tcp", "22/tcp"},
 }
 
 func TestBuildDeployment(t *testing.T) {
-	
+
 	testBuild := BuildDeployment(testDeployment)
-	
+
 	if testBuild.Config.Memory != testDeployment.Memory {
 		t.Errorf("expected %s, got %s", testDeployment.Memory, testBuild.Config.Memory)
 	}
@@ -49,8 +49,8 @@ func TestBuildDeployment(t *testing.T) {
 		t.Errorf("expected %s, got %s", testDeployment.Memory, testBuild.Config.Memory)
 	}
 	for index := range testDeployment.ExposedPorts {
-		if _,ok := testBuild.Config.ExposedPorts[testDeployment.ExposedPorts[index]]; !ok {
-    			t.Errorf("ExposedPorts do not match. Deployment: %s, Build: %s", testDeployment.ExposedPorts, testBuild.Config.ExposedPorts)
+		if _, ok := testBuild.Config.ExposedPorts[testDeployment.ExposedPorts[index]]; !ok {
+			t.Errorf("ExposedPorts do not match. Deployment: %s, Build: %s", testDeployment.ExposedPorts, testBuild.Config.ExposedPorts)
 		}
 	}
 }
@@ -97,6 +97,3 @@ func TestListContainers(t *testing.T) {
 		t.Errorf("Length: %i, Containers are: %s", len(cont), cont)
 	}
 }
-
-
-
