@@ -69,7 +69,7 @@ type ContainerInfo struct {
 // we aren't deploying containers with an nginx configuration to start.
 // the user will have to later choose a hostname and initiate a custom domain deployment.
 // deploying the container deploys it using docker's default hostname.
-// so nginx deployment will me its own thing
+// so nginx deployment will be its own thing
 
 func BuildDeployment(d Deployment) Deployment {
 	d.Config = CreateContainer{
@@ -122,23 +122,15 @@ func SendDockerCommand(host Host, command string, method string) ([]byte, error)
 func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
 	//
 	// order of operations:
-	// check if hostname exists
 	// builds the deployment structure and configs
 	// logs deployment struct to mongo, including configs
 	// updates the container count for that docker host
 	// deploys the container and returns connection information
 	//
-	exists, err := CheckContainerHostnameExists(d)
-	if err != nil {
-		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
-	}
-	if exists {
-		return []byte(ErrorMessages["EncodingError"] + err.Error())
-	}
 	// build the deployment struct
 	d = BuildDeployment(d)
 	// log it locally
-	err = MongoInsert(MongoDeployCollection, d)
+	err := MongoInsert(MongoDeployCollection, d)
 	if err != nil {
 		return []byte(ErrorMessages["EncodingError"] + err.Error())
 	}

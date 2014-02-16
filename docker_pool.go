@@ -18,7 +18,7 @@ type Host struct {
 }
 
 type DockerHosts struct {
-	Host []Host
+	Host       []Host
 }
 
 // gets the docker configs from the json config file.
@@ -29,7 +29,7 @@ func GetDockerHosts() (DockerHosts, error) {
 		return dockerHosts, err
 	}
 	decoder := json.NewDecoder(config)
-	decoder.Decode(&dockerHosts)
+	err = decoder.Decode(&dockerHosts)
 	if err != nil {
 		return dockerHosts, err
 	}

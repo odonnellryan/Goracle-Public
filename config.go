@@ -6,7 +6,7 @@ var (
 	// mongo db
 	MongoDBAddress            = "127.0.0.1"
 	MongoDBPort               = "27017"
-	MongoDBName               = "test"
+	MongoDBName               = "mydb"
 	MongoDeployCollection     = "deployments"
 	MongoUserCollection       = "userdata"
 	MongoDockerHostCollection = "dockerhosts"
