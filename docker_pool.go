@@ -18,7 +18,7 @@ type Host struct {
 }
 
 type DockerHosts struct {
-	Host       []Host
+	Host []Host
 }
 
 // gets the docker configs from the json config file.

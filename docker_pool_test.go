@@ -5,13 +5,13 @@ import (
 	//"encoding/json"
 )
 
-var testHostFile = DockerHosts {
-		Host: []Host{{
-				Hostname: "local_testing",
-				Address:  "http://127.0.0.1:8888/",
-				User:     "ryan",
-				Password: "test",
-		},},
+var testHostFile = DockerHosts{
+	Host: []Host{{
+		Hostname: "local_testing",
+		Address:  "http://127.0.0.1:8888/",
+		User:     "ryan",
+		Password: "test",
+	}},
 }
 
 func TestGetDockerHosts(t *testing.T) {
@@ -21,6 +21,6 @@ func TestGetDockerHosts(t *testing.T) {
 	}
 	if dockerHostsFromFile.Host[0] != testHostFile.Host[0] {
 		t.Errorf("Expected %s got: %s", testHostFile,
-		dockerHostsFromFile)
+			dockerHostsFromFile)
 	}
 }

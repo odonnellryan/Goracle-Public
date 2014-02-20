@@ -7,14 +7,14 @@ import (
 	"testing"
 )
 
-var testHost = Host {
+var testHost = Host{
 	Hostname: "local_testing",
 	Address:  "http://127.0.0.1:8888/",
 	User:     "ryan",
 	Password: "test",
 }
 
-var testDeployment = Deployment {
+var testDeployment = Deployment{
 	User:          "testUser",
 	ContainerName: "containerName",
 	Image:         "base",
@@ -31,33 +31,33 @@ func TestBuildDeployment(t *testing.T) {
 	testBuild := BuildDeployment(testDeployment)
 
 	if testBuild.Config.Memory != testDeployment.Memory {
-		t.Errorf("expected %s, got %s", testDeployment.Memory, 
-		testBuild.Config.Memory)
+		t.Errorf("expected %s, got %s", testDeployment.Memory,
+			testBuild.Config.Memory)
 	}
 	if testBuild.Config.MemorySwap != testDeployment.MemorySwap {
-		t.Errorf("expected %s, got %s", testDeployment.MemorySwap, 
-		testBuild.Config.MemorySwap)
+		t.Errorf("expected %s, got %s", testDeployment.MemorySwap,
+			testBuild.Config.MemorySwap)
 	}
 	if testBuild.Config.CpuShares != testDeployment.CPU {
-		t.Errorf("expected %s, got %s", testDeployment.CPU, 
-		testBuild.Config.CpuShares)
+		t.Errorf("expected %s, got %s", testDeployment.CPU,
+			testBuild.Config.CpuShares)
 	}
 	if testBuild.Config.Image != testDeployment.Image {
-		t.Errorf("expected %s, got %s", testDeployment.Image, 
-		testBuild.Config.Image)
+		t.Errorf("expected %s, got %s", testDeployment.Image,
+			testBuild.Config.Image)
 	}
 	if testBuild.Config.Memory != testDeployment.Memory {
-		t.Errorf("expected %s, got %s", testDeployment.Memory, 
-		testBuild.Config.Memory)
+		t.Errorf("expected %s, got %s", testDeployment.Memory,
+			testBuild.Config.Memory)
 	}
 	if testBuild.Config.Memory != testDeployment.Memory {
-		t.Errorf("expected %s, got %s", testDeployment.Memory, 
-		testBuild.Config.Memory)
+		t.Errorf("expected %s, got %s", testDeployment.Memory,
+			testBuild.Config.Memory)
 	}
 	for index := range testDeployment.ExposedPorts {
 		if _, ok := testBuild.Config.ExposedPorts[testDeployment.ExposedPorts[index]]; !ok {
 			t.Errorf("ExposedPorts do not match. Deployment: %s, Build: %s",
-			testDeployment.ExposedPorts, testBuild.Config.ExposedPorts)
+				testDeployment.ExposedPorts, testBuild.Config.ExposedPorts)
 		}
 	}
 }
@@ -88,7 +88,7 @@ func TestHTTPToDocker(t *testing.T) {
 }
 
 func TestSendDockerCommand(t *testing.T) {
-	resp, err := SendDockerCommand(testHost, "images/json", "GET")
+	resp, err := SendDockerCommand(testHost, "images/json", "GET", nil)
 	if err != nil {
 		t.Errorf("Error: %s \n", err)
 	}

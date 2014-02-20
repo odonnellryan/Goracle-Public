@@ -11,6 +11,7 @@ var ErrorMessages = map[string]string{
 	"hostError":           "Error selecting Docker host. ",
 	"DBConnectionError":   "Can not access database. ",
 	"HostNameExistsError": "That hostname seems to be in use. ",
+	"DeploymentError":     "There was a problem deploying the Docker container. ",
 }
 
 var Messages = map[string]string{

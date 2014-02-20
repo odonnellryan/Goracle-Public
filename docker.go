@@ -3,8 +3,10 @@ package main
 
 import (
 	//"strings"
+	"io"
 	"io/ioutil"
 	//"log"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -25,6 +27,7 @@ type Deployment struct {
 	IP            string
 	ExposedPorts  []string
 	Config        CreateContainer
+	DeployedInfo  DeployedContainerInfo
 }
 
 type CreateContainer struct {
@@ -53,6 +56,11 @@ type CreateContainer struct {
 	Entrypoint      []string
 	NetworkDisabled bool
 	OnBuild         []string
+}
+
+type DeployedContainerInfo struct {
+	Id       string
+	Warnings []string
 }
 
 type ContainerInfo struct {
@@ -95,7 +103,7 @@ type ListContainers struct {
 }
 
 // HTTP client, http basic auth stuff
-func SendDockerCommand(host Host, command string, method string) ([]byte, error) {
+func SendDockerCommand(host Host, command string, method string, body io.Reader) ([]byte, error) {
 	client := &http.Client{}
 	response, err := client.Get(host.Address)
 	if err != nil {
@@ -103,10 +111,11 @@ func SendDockerCommand(host Host, command string, method string) ([]byte, error)
 	}
 	// closes the connection
 	defer response.Body.Close()
-	request, err := http.NewRequest(method, (host.Address + command), nil)
+	request, err := http.NewRequest(method, (host.Address + command), body)
 	if err != nil {
 		return nil, err
 	}
+	request.Header.Set("Content-Type", "application/json")
 	request.SetBasicAuth(host.User, host.Password)
 	response, err = client.Do(request)
 	if err != nil {
@@ -116,39 +125,55 @@ func SendDockerCommand(host Host, command string, method string) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	return []byte(res), nil
+	return res, nil
 }
+
+// can probably not make this use the http request?
 
 func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
 	//
 	// order of operations:
 	// builds the deployment structure and configs
-	// logs deployment struct to mongo, including configs
+	// deploys the container
+	// gets back container Id
+	// logs deployment struct to mongo, including configs and info
 	// updates the container count for that docker host
-	// deploys the container and returns connection information
 	//
+
 	// build the deployment struct
 	d = BuildDeployment(d)
-	// log it locally
-	err := MongoInsert(MongoDeployCollection, d)
+	body, err := json.Marshal(d)
 	if err != nil {
 		return []byte(ErrorMessages["EncodingError"] + err.Error())
 	}
-
-	// update container count
-	err = MongoUpsert(MongoDockerHostCollection, host.Hostname, host)
+	// send the create command
+	resp, err := SendDockerCommand(host, "containers/create", "method",
+		bytes.NewReader(body))
+	if err != nil {
+		return []byte(ErrorMessages["EncodingError"] + err.Error())
+	}
+	deployedInfo := DeployedContainerInfo{}
+	decodeResp := json.NewDecoder(bytes.NewReader(resp))
+	if err = decodeResp.Decode(&deployedInfo); err != nil {
+		return []byte(ErrorMessages["EncodingError"] + err.Error())
+	}
+	d.DeployedInfo = deployedInfo
+	// log it
+	err = MongoInsert(MongoDeployCollection, d)
 	if err != nil {
 		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
 	}
-	// make this actually do stuff.
-	SendDockerCommand(host, "command", "method")
-
-	return []byte(Messages["DeploymentSuccess"])
+	// update container count
+	err = IncrementContainerCount(host)
+	if err != nil {
+		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
+	}
+	return []byte(Messages["DeploymentSuccess"] + string(resp))
 }
 
 func SearchForImage(d Deployment, h Host) ([]byte, error) {
 	searchString := "images/search?term=" + d.Image
-	resp, err := SendDockerCommand(h, searchString, "GET")
+	resp, err := SendDockerCommand(h, searchString, "GET", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +183,7 @@ func SearchForImage(d Deployment, h Host) ([]byte, error) {
 func ListAllContainers(h Host) ([]ContainerInfo, error) {
 	listString := "containers/json?all=1"
 	containers := &[]ContainerInfo{}
-	resp, err := SendDockerCommand(h, listString, "GET")
+	resp, err := SendDockerCommand(h, listString, "GET", nil)
 	if err != nil {
 		return nil, err
 	}

@@ -22,7 +22,7 @@ type DockerDatabaseWrite struct {
 
 func MongoInsert(collectionName string, d interface{}) error {
 	//
-	// writes to the database defined in config and the collection 
+	// writes to the database defined in config and the collection
 	// defined above (collectionName)
 	// uses struct (d interface) to define the data structure
 	//
@@ -37,8 +37,8 @@ func MongoInsert(collectionName string, d interface{}) error {
 	return err
 }
 
-func MongoUpsert(collectionName string, query interface{}, 
-                 update interface{}) error {
+func MongoUpsert(collectionName string, query interface{},
+	update interface{}) error {
 	//
 	// is used to update the dockerhosts collection. this is used to keep
 	// track of information about various docker hosts.
@@ -75,7 +75,7 @@ func GetDockerHostInformation() (DockerHosts, error) {
 
 func WriteNginxConfig(n NginxConfig) error {
 	db := mysql.New("tcp", "", (NginxDBAddress + NginxDBPort),
-	                NginxDBUser, NginxDBPassword, NginxDBName)
+		NginxDBUser, NginxDBPassword, NginxDBName)
 	err := db.Connect()
 	if err != nil {
 		fmt.Println(err)

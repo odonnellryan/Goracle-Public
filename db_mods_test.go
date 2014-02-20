@@ -1,17 +1,18 @@
 package main
 
 import (
-	"testing"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
-	// "fmt"
-	)
-	
+	"testing"
+
+// "fmt"
+)
+
 var testCollection = "testCollection"
 
 type TestResult struct {
-	Testone	string
-	Testtwo	string
+	Testone string
+	Testtwo string
 }
 
 var testingQuery = TestResult{
@@ -29,20 +30,20 @@ func TestDBConnection(t *testing.T) {
 
 func TestMongoInsert(t *testing.T) {
 	session, err := mgo.Dial(MongoDBAddress)
-    if err != nil {
+	if err != nil {
 		t.Errorf("Dial: %s", err)
-	}	
-    defer session.Close()
-    // Optional. Switch the session to a monotonic behavior.
-    session.SetMode(mgo.Monotonic, true)
-    c := session.DB(MongoDBName).C(testCollection)
-    err = MongoInsert(testCollection, testingQuery)
-    if err != nil {
+	}
+	defer session.Close()
+	// Optional. Switch the session to a monotonic behavior.
+	session.SetMode(mgo.Monotonic, true)
+	c := session.DB(MongoDBName).C(testCollection)
+	err = MongoInsert(testCollection, testingQuery)
+	if err != nil {
 		t.Errorf("Insert: %s", err)
 	}
-    result := TestResult{}
-    err = c.Find(testingQuery).One(&result)
-    if err != nil {
+	result := TestResult{}
+	err = c.Find(testingQuery).One(&result)
+	if err != nil {
 		t.Errorf("Find: %s", err)
 	}
 	if result != testingQuery {
@@ -53,20 +54,20 @@ func TestMongoInsert(t *testing.T) {
 func TestMongoUpsert(t *testing.T) {
 	updateQuery := TestResult{"one", "2"}
 	session, err := mgo.Dial(MongoDBAddress)
-    if err != nil {
+	if err != nil {
 		t.Errorf("Dial: %s", err)
-	}	
-    defer session.Close()
-    // Optional. Switch the session to a monotonic behavior.
-    session.SetMode(mgo.Monotonic, true)
-    c := session.DB(MongoDBName).C(testCollection)
+	}
+	defer session.Close()
+	// Optional. Switch the session to a monotonic behavior.
+	session.SetMode(mgo.Monotonic, true)
+	c := session.DB(MongoDBName).C(testCollection)
 	err = MongoUpsert(testCollection, testingQuery, updateQuery)
-    if err != nil {
+	if err != nil {
 		t.Errorf("Insert: %s", err)
 	}
-    result := TestResult{}
-    err = c.Find(bson.M{"testtwo": "2"}).One(&result)
-    if err != nil {
+	result := TestResult{}
+	err = c.Find(bson.M{"testtwo": "2"}).One(&result)
+	if err != nil {
 		t.Errorf("Find: %s", err)
 	}
 	if result != updateQuery {
