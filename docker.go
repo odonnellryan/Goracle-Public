@@ -103,34 +103,32 @@ type ListContainers struct {
 }
 
 // HTTP client, http basic auth stuff
-func SendDockerCommand(host Host, command string, method string, body io.Reader) ([]byte, error) {
+func SendDockerCommand(host Host, command string, method string, body io.Reader) (http.Response, error) {
+	nullRes := http.Response{}
 	client := &http.Client{}
 	response, err := client.Get(host.Address)
 	if err != nil {
-		return nil, err
+		return nullRes, err
 	}
 	// closes the connection
 	defer response.Body.Close()
 	request, err := http.NewRequest(method, (host.Address + command), body)
 	if err != nil {
-		return nil, err
+		return nullRes, err
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.SetBasicAuth(host.User, host.Password)
 	response, err = client.Do(request)
 	if err != nil {
-		return nil, err
+		return nullRes, err
 	}
-	res, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+	return *response, nil
 }
 
 // can probably not make this use the http request?
 
-func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
+func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string, error) {
+
 	//
 	// order of operations:
 	// builds the deployment structure and configs
@@ -141,57 +139,75 @@ func DeployNewContainer(host Host, d Deployment, r *http.Request) []byte {
 	//
 
 	// build the deployment struct
-	d = BuildDeployment(d)
-	body, err := json.Marshal(d)
+	deployment := BuildDeployment(d)
+	deployedInfo := DeployedContainerInfo{}
+	body, err := json.Marshal(deployment.Config)
 	if err != nil {
-		return []byte(ErrorMessages["EncodingError"] + err.Error())
+		return deployedInfo, "", err
 	}
 	// send the create command
-	resp, err := SendDockerCommand(host, "containers/create", "method",
+	resp, err := SendDockerCommand(host, "containers/create", "POST",
 		bytes.NewReader(body))
-	if err != nil {
-		return []byte(ErrorMessages["EncodingError"] + err.Error())
+	if resp.StatusCode != 201 {
+		fmt.Printf("response status code: %s \n", resp.StatusCode)
+		msg, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return deployedInfo, "", err
+		}
+		fmt.Printf("response error: %s \n", msg)
 	}
-	deployedInfo := DeployedContainerInfo{}
-	decodeResp := json.NewDecoder(bytes.NewReader(resp))
-	if err = decodeResp.Decode(&deployedInfo); err != nil {
-		return []byte(ErrorMessages["EncodingError"] + err.Error())
+	if err != nil {
+		return deployedInfo, "", err
+	}
+	decode := json.NewDecoder(resp.Body)
+	err = decode.Decode(&deployedInfo)
+	if err != nil {
+		return deployedInfo, "", err
 	}
 	d.DeployedInfo = deployedInfo
 	// log it
 	err = MongoInsert(MongoDeployCollection, d)
 	if err != nil {
-		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
+		return deployedInfo, "", err
 	}
 	// update container count
 	err = IncrementContainerCount(host)
 	if err != nil {
-		return []byte(ErrorMessages["DBConnectionError"] + err.Error())
+		return deployedInfo, "", err
 	}
-	return []byte(Messages["DeploymentSuccess"] + string(resp))
+	return deployedInfo, "", nil
 }
 
 func SearchForImage(d Deployment, h Host) ([]byte, error) {
 	searchString := "images/search?term=" + d.Image
 	resp, err := SendDockerCommand(h, searchString, "GET", nil)
+
 	if err != nil {
 		return nil, err
 	}
-	return resp, nil
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
 }
 
 func ListAllContainers(h Host) ([]ContainerInfo, error) {
 	listString := "containers/json?all=1"
-	containers := &[]ContainerInfo{}
+	containers := []ContainerInfo{}
 	resp, err := SendDockerCommand(h, listString, "GET", nil)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(resp, &containers)
+	decode := json.NewDecoder(resp.Body)
+	err = decode.Decode(&containers)
 	if err != nil {
-		fmt.Println(err)
+		return containers, err
 	}
-	return *containers, nil
+	if err != nil {
+		return nil, err
+	}
+	return containers, nil
 }
 
 func StopContainerRequest() {

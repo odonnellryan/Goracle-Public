@@ -7,5 +7,5 @@ goracle > /var/log/goracle.log 2>&1 &
 wrapdocker > /var/log/docker.log 2>&1 &
 sleep 2
 chown www-data /var/run/docker.sock
-go test -cover
-#/bin/bash
+#go test -cover
+/bin/bash

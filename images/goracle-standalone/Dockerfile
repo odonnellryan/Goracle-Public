@@ -41,7 +41,6 @@ RUN /usr/sbin/mysqld & \
 
 EXPOSE 6000
 ENTRYPOINT /start.sh
-RUN usermod -g docker www-data
 ADD bin /usr/local/bin
 ADD scripts /
 ADD nginx/ /etc/

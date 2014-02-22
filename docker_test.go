@@ -17,7 +17,7 @@ var testHost = Host{
 var testDeployment = Deployment{
 	User:          "testUser",
 	ContainerName: "containerName",
-	Image:         "base",
+	Image:         "ubuntu",
 	Memory:        2097152,
 	MemorySwap:    -1,
 	CPU:           1,
@@ -92,7 +92,14 @@ func TestSendDockerCommand(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error: %s \n", err)
 	}
-	fmt.Printf("Docker Command Response: %s \n", resp)
+	if resp.StatusCode != 201 {
+		t.Errorf("Unexpected Status Code: %s \n", resp.StatusCode)
+		msg, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			t.Errorf("Error: %s \n", err)
+		}
+		t.Errorf("Reason: %s \n", msg)
+	}
 }
 
 func TestListContainers(t *testing.T) {
@@ -103,4 +110,10 @@ func TestListContainers(t *testing.T) {
 	if len(cont) != 0 {
 		t.Errorf("Length: %i, Containers are: %s", len(cont), cont)
 	}
+}
+
+func TestContainerDeployment(t *testing.T) {
+	resp, ermsg, err := DeployNewContainer(testHost, testDeployment)
+
+	fmt.Printf("Docker Deploy Response: %s ermsg: %s err: %s\n", resp, ermsg, err)
 }

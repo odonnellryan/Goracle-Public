@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -53,10 +54,14 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		IP:            r.FormValue("ip"),
 		ExposedPorts:  CommaStringToSlice(r.FormValue("exposed_ports")),
 	}
-	response := DeployNewContainer(host, d, r)
-
+	deployment, errMsg, err := DeployNewContainer(host, d)
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("%s errmsg %s", err, errMsg)))
+		return
+	}
 	// Testing! Works kinda.
-	w.Write([]byte(response))
+	resp, err := json.Marshal(deployment)
+	w.Write(resp)
 }
 
 func ParseMongoEndpoint(endpoint string) (string, string, string, error) {
