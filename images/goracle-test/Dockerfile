@@ -34,4 +34,3 @@ ADD	        .	/go/src/Goracle
 ADD         scripts /
 ADD         nginx /etc/nginx/
 RUN         chmod +x /start.sh
-RUN         chmod +x /pull.sh

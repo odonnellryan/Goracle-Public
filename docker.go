@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	//"net/url"
 )
 
 //
@@ -104,24 +105,26 @@ type ListContainers struct {
 
 // HTTP client, http basic auth stuff
 func SendDockerCommand(host Host, command string, method string, body io.Reader) (http.Response, error) {
-	nullRes := http.Response{}
-	client := &http.Client{}
-	response, err := client.Get(host.Address)
-	if err != nil {
-		return nullRes, err
-	}
-	// closes the connection
-	defer response.Body.Close()
-	request, err := http.NewRequest(method, (host.Address + command), body)
-	if err != nil {
-		return nullRes, err
-	}
-	request.Header.Set("Content-Type", "application/json")
-	request.SetBasicAuth(host.User, host.Password)
-	response, err = client.Do(request)
-	if err != nil {
-		return nullRes, err
-	}
+	// url stuff yeah
+	// the client woo
+	nulResp := http.Response{}
+    client := &http.Client{}
+    response, err := client.Get(host.Address)
+    if err != nil {
+            return nulResp, err
+    }
+    // closes the connection
+    defer response.Body.Close()
+    request, err := http.NewRequest(method, (host.Address + command), body)
+    if err != nil {
+            return nulResp, err
+    }
+    request.Header.Set("Content-Type", "application/json")
+    request.SetBasicAuth(host.User, host.Password)
+    response, err = client.Do(request)
+    if err != nil {
+            return nulResp, err
+    }
 	return *response, nil
 }
 
