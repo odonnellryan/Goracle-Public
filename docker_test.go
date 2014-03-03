@@ -18,10 +18,7 @@ var testDeployment = Deployment{
 	User:          "testUser",
 	ContainerName: "containerName",
 	Image:         "docker-test-image",
-	Memory:        2097152,
-	MemorySwap:    -1,
-	CPU:           1,
-	Command:       []string{"/bin/bash"},
+	Command:       []string{"sh"},
 	IP:            "127.0.0.1",
 	ExposedPorts:  []string{"88/tcp", "22/tcp"},
 }
@@ -93,24 +90,9 @@ func TestDockerPull(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error: %s \n", err)
 	}
+	msg, err := ioutil.ReadAll(resp.Body)
 	if resp.StatusCode != 200 {
 		t.Errorf("Unexpected Status Code: %s \n", resp.StatusCode)
-		msg, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			t.Errorf("Error: %s \n", err)
-		}
-		t.Errorf("Reason: %s \n", msg)
-	}
-}
-
-func TestSendDockerCommand(t *testing.T) {
-	resp, err := SendDockerCommand(testHost, "images/json", "GET", nil)
-	if err != nil {
-		t.Errorf("Error: %s \n", err)
-	}
-	if resp.StatusCode != 200 {
-		t.Errorf("Unexpected Status Code: %s \n", resp.StatusCode)
-		msg, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			t.Errorf("Error: %s \n", err)
 		}
@@ -125,6 +107,22 @@ func TestListContainers(t *testing.T) {
 	}
 	if len(cont) != 0 {
 		t.Errorf("Length: %i, Containers are: %s", len(cont), cont)
+	}
+	fmt.Printf("Containers: %s \n", cont)
+}
+
+func TestSendDockerCommand(t *testing.T) {
+	resp, err := SendDockerCommand(testHost, "images/json", "GET", nil)
+	if err != nil {
+		t.Errorf("Error: %s \n", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Errorf("Unexpected Status Code: %s \n", resp.StatusCode)
+		msg, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			t.Errorf("Error: %s \n", err)
+		}
+		t.Errorf("Reason: %s \n", msg)
 	}
 }
 
