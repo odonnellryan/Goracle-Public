@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 func ReturnDockerHost(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +19,12 @@ func ReturnDockerHost(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
-	// Request will be structured as such:
+	
+	// 
+	// post request:
+	// FormValue: memory, memory_swap, user, container_name
+	// 
+	
 	// Checking...
 	host, err := SelectHost()
 	if err != nil {
@@ -33,7 +37,8 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	memory_swap, err := strconv.ParseInt(r.FormValue("memory_swap"), 10, 64)
+	memory_swap, err := strconv.ParseInt(r.FormValue("memory_swap"),
+	10, 64)
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
@@ -48,7 +53,8 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		ContainerName: r.FormValue("container_name"),
 		Image:         r.FormValue("image"),
 		Memory:        memory,      // number in bytes
-		MemorySwap:    memory_swap, // number in bytes for memory + swap, -1 for no swap
+		MemorySwap:    memory_swap, // number in bytes for memory 
+									// + swap, -1 for no swap
 		CPU:           cpu,
 		Command:       CommaStringToSlice(r.FormValue("command")),
 		IP:            r.FormValue("ip"),
@@ -64,27 +70,10 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
-func ParseMongoEndpoint(endpoint string) (string, string, string, error) {
-	portSeperatorIndex := strings.LastIndex(endpoint, ":")
-	if portSeperatorIndex < 1 {
-		err := fmt.Errorf("Invalid format of mongo endpoint. Correct syntax is host:port/db")
-		return "", "0", "", err
-	}
-	host := endpoint[0 : portSeperatorIndex-1]
-	slashIndex := strings.Index(endpoint, "/")
-	if slashIndex < 1 {
-		err := fmt.Errorf("Invalid format of mongo endpoint. Correct syntax is host:port/db")
-		return "", "0", "", err
-	}
-	port := endpoint[portSeperatorIndex+1 : slashIndex-1]
-	db := endpoint[slashIndex+1:]
-	return host, port, db, nil
-}
-
 func main() {
 	var mongoHost, loadBalancerHost string
-	flag.StringVar(&mongoHost, "mongoserver", "", "")
-	flag.StringVar(&loadBalancerHost, "loadbalancer", "", "")
+	flag.StringVar(&mongoHost, "mongoserver", "", "host:port/db")
+	flag.StringVar(&loadBalancerHost, "loadbalancer", "", "host")
 	flag.Parse()
 
 	if mongoHost == "" {
@@ -103,12 +92,13 @@ func main() {
 	MongoDBAddress, MongoDBPort, MongoDBName, err = ParseMongoEndpoint(mongoHost)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	dispatcher := &RequestDispatcher{make(map[string]*http.ServeMux)}
 
 	// Add handlers here
-	dispatcher.AddHandler("GET", "/deployments/", HandleDeploymentRequest)
+	dispatcher.AddHandler("POST", "/deployments/", HandleDeploymentRequest)
 	dispatcher.AddHandler("GET", "/docker_pool/", ReturnDockerHost)
 
 	// Bottom is hit first, then second to last, etc

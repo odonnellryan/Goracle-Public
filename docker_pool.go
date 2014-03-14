@@ -37,7 +37,7 @@ func GetDockerHosts() (DockerHosts, error) {
 }
 
 // updates all hosts in the mongo db
-func UpdateAllMongoDockerHostsInCollection() error {
+func UpdateAllDockerHostsInMongo() error {
 	dockerHosts, err := GetDockerHosts()
 	if err != nil {
 		return err
@@ -67,7 +67,9 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 			return err
 		}
 		d.Host[index].Containers = strconv.Itoa(len(containers))
-		err = MongoUpsert(MongoDockerHostCollection, d.Host[index].Hostname, d.Host[index])
+		err = MongoUpsert(MongoDockerHostCollection, 
+			bson.M{"Hostname": d.Host[index].Hostname}, 
+				d.Host[index])
 		if err != nil {
 			return err
 		}
@@ -84,7 +86,9 @@ func IncrementContainerCount(update Host) error {
 	}
 	defer session.Close()
 	collection := session.DB(MongoDBName).C(MongoDockerHostCollection)
-	return collection.Update(update.Hostname, bson.M{"$inc": bson.M{"Containers": 1}})
+	_, err = collection.Upsert(bson.M{"Hostname": update.Hostname},
+			bson.M{"$inc": bson.M{"Containers": 1}})
+	return err
 }
 
 func SelectHost() (Host, error) {

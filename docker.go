@@ -165,18 +165,18 @@ func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string,
 	decode := json.NewDecoder(resp.Body)
 	err = decode.Decode(&deployedInfo)
 	if err != nil {
-		return deployedInfo, "", err
+		return deployedInfo, "json decode", err
 	}
-	d.DeployedInfo = deployedInfo
+	deployment.DeployedInfo = deployedInfo
 	// log it
-	err = MongoInsert(MongoDeployCollection, d)
+	err = MongoInsert(MongoDeployCollection, deployment)
 	if err != nil {
-		return deployedInfo, "", err
+		return deployedInfo, "mongo error", err
 	}
 	// update container count
 	err = IncrementContainerCount(host)
 	if err != nil {
-		return deployedInfo, "", err
+		return deployedInfo, "increment error", err
 	}
 	return deployedInfo, "", nil
 }

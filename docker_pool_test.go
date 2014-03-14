@@ -24,3 +24,17 @@ func TestGetDockerHosts(t *testing.T) {
 			dockerHostsFromFile)
 	}
 }
+
+func TestUpdateAllDockerHostsInMongo(t *testing.T) {
+	err := UpdateAllDockerHostsInMongo()
+	if err != nil {
+		t.Errorf("UpdateAllDockerHosts error: %s", err)
+	}
+}
+
+func TestIncrementContainerCount(t *testing.T) {
+	err := IncrementContainerCount(testHostFile.Host[0])
+	if err != nil {
+		t.Errorf("IncrementContainerCount error: %s", err)
+	}
+}

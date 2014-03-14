@@ -111,23 +111,24 @@ func TestListContainers(t *testing.T) {
 	fmt.Printf("Containers: %s \n", cont)
 }
 
+func TestContainerDeployment(t *testing.T) {
+	resp, ermsg, err := DeployNewContainer(testHost, testDeployment)
+
+	fmt.Printf("Docker Deploy Response: %s ermsg: %s err: %s\n", resp, ermsg, err)
+}
+
 func TestSendDockerCommand(t *testing.T) {
 	resp, err := SendDockerCommand(testHost, "images/json", "GET", nil)
 	if err != nil {
 		t.Errorf("Error: %s \n", err)
 	}
+	msg, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+			t.Errorf("Error: %s \n", err)
+	}
 	if resp.StatusCode != 200 {
 		t.Errorf("Unexpected Status Code: %s \n", resp.StatusCode)
-		msg, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			t.Errorf("Error: %s \n", err)
-		}
 		t.Errorf("Reason: %s \n", msg)
 	}
-}
-
-func TestContainerDeployment(t *testing.T) {
-	resp, ermsg, err := DeployNewContainer(testHost, testDeployment)
-
-	fmt.Printf("Docker Deploy Response: %s ermsg: %s err: %s\n", resp, ermsg, err)
+	fmt.Printf("Images: %s \n", msg)
 }
