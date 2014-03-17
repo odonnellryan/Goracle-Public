@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
-	// "fmt"
+	"fmt"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"strconv"
@@ -45,20 +45,6 @@ func UpdateAllDockerHostsInMongo() error {
 	return UpdateTotalContainerNumber(dockerHosts)
 }
 
-// update a single host entry in mongo to reflect their container count
-func UpdateContainerNumberInHost(host Host) error {
-	containers, err := ListAllContainers(host)
-	if err != nil {
-		return err
-	}
-	host.Containers = strconv.Itoa(len(containers))
-	err = MongoUpsert(MongoDockerHostCollection, host.Hostname, host)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // update all host entries in mongo to reflect their container count
 func UpdateTotalContainerNumber(d DockerHosts) error {
 	for index := range d.Host {
@@ -74,6 +60,20 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 			return err
 		}
 		return nil
+	}
+	return nil
+}
+
+// update a single host entry in mongo to reflect their container count
+func UpdateContainerNumberInHost(host Host) error {
+	containers, err := ListAllContainers(host)
+	if err != nil {
+		return err
+	}
+	host.Containers = strconv.Itoa(len(containers))
+	err = MongoUpsert(MongoDockerHostCollection, host.Hostname, host)
+	if err != nil {
+		return err
 	}
 	return nil
 }

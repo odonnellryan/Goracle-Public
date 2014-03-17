@@ -58,19 +58,21 @@ func GetDockerHostInformation() (DockerHosts, error) {
 	//
 	// gets all dockerhost information from the mongo DB..
 	//
-	hosts := DockerHosts{}
+	dockerhosts := DockerHosts{}
+	host := []Host{}
 	// mongo db host, set in config.go
 	session, err := mgo.Dial(MongoDBAddress)
 	if err != nil {
-		return hosts, err
+		return dockerhosts, err
 	}
 	defer session.Close()
 	collection := session.DB(MongoDBName).C(MongoDockerHostCollection)
-	err = collection.Find(nil).All(&hosts)
+	err = collection.Find(nil).All(&host)
 	if err != nil {
-		return hosts, err
+		return dockerhosts, err
 	}
-	return hosts, nil
+	dockerhosts.Host = host
+	return dockerhosts, nil
 }
 
 func WriteNginxConfig(n NginxConfig) error {

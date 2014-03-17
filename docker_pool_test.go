@@ -38,3 +38,10 @@ func TestIncrementContainerCount(t *testing.T) {
 		t.Errorf("IncrementContainerCount error: %s", err)
 	}
 }
+
+func TestSelectHost(t *testing.T) {
+	host, err := SelectHost()
+	if err != nil {
+		t.Errorf("TestSelectHost error: %s host returned: %s", err, host)
+	}
+}
