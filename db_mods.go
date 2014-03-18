@@ -8,7 +8,7 @@ import (
 	"github.com/ziutek/mymysql/mysql"
 	_ "github.com/ziutek/mymysql/native" // Native engine
 	"labix.org/v2/mgo"
-	// "labix.org/v2/mgo/bson"
+	"labix.org/v2/mgo/bson"
 )
 
 type DockerDatabaseWrite struct {
@@ -45,12 +45,14 @@ func MongoUpsert(collectionName string, query interface{},
 	//
 	// mongo db host, set in config.go
 	session, err := mgo.Dial(MongoDBAddress)
+	session.SetMode(mgo.Monotonic, true)
 	if err != nil {
 		return err
 	}
 	defer session.Close()
 	collection := session.DB(MongoDBName).C(collectionName)
-	_, err = collection.Upsert(query, update)
+	// that set thing is needed because Mongo.
+	_, err = collection.Upsert(query, bson.M{"$set":update})
 	return err
 }
 
@@ -62,6 +64,7 @@ func GetDockerHostInformation() (DockerHosts, error) {
 	host := []Host{}
 	// mongo db host, set in config.go
 	session, err := mgo.Dial(MongoDBAddress)
+	session.SetMode(mgo.Monotonic, true)
 	if err != nil {
 		return dockerhosts, err
 	}

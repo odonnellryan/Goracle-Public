@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	//"fmt"
 	"os"
-	"fmt"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
-	"strconv"
+	//"strconv"
 )
 
 type Host struct {
@@ -14,7 +14,7 @@ type Host struct {
 	Address    string
 	User       string
 	Password   string
-	Containers string
+	Containers int
 }
 
 type DockerHosts struct {
@@ -52,7 +52,7 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 		if err != nil {
 			return err
 		}
-		d.Host[index].Containers = strconv.Itoa(len(containers))
+		d.Host[index].Containers = len(containers)
 		err = MongoUpsert(MongoDockerHostCollection, 
 			bson.M{"Hostname": d.Host[index].Hostname}, 
 				d.Host[index])
@@ -70,8 +70,10 @@ func UpdateContainerNumberInHost(host Host) error {
 	if err != nil {
 		return err
 	}
-	host.Containers = strconv.Itoa(len(containers))
-	err = MongoUpsert(MongoDockerHostCollection, host.Hostname, host)
+	host.Containers = len(containers)
+	err = MongoUpsert(MongoDockerHostCollection, 
+			bson.M{"Hostname": host.Hostname}, 
+				host)
 	if err != nil {
 		return err
 	}
