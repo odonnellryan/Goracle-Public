@@ -4,6 +4,7 @@
 		"Hostname": "local_testing",
     	"Address": "http://127.0.0.1:8888/",
     	"User": "ryan",
-    	"Password": "test"
+    	"Password": "test",
+    	"Containers": 1
 	}]
 }

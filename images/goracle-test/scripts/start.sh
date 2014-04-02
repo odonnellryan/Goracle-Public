@@ -8,5 +8,6 @@ goracle > /var/log/goracle.log 2>&1 &
 wrapdocker > /var/log/docker.log 2>&1 &
 sleep 5
 chown www-data /var/run/docker.sock
-go test -cover
+go test -coverprofile=coverage.out 
+go tool cover -func=coverage.out
 #/bin/bash

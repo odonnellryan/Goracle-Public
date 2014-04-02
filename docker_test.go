@@ -77,11 +77,10 @@ func TestHTTPToDocker(t *testing.T) {
 	if err != nil {
 		t.Errorf("Response error: %s", err)
 	}
-	res, err := ioutil.ReadAll(response.Body)
+	_, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		t.Errorf("Read response error: %s", err)
 	}
-	fmt.Printf("Test HTTP Response: %s \n", res)
 }
 
 func TestDockerPull(t *testing.T) {
@@ -108,13 +107,6 @@ func TestListContainers(t *testing.T) {
 	if len(cont) != 0 {
 		t.Errorf("Length: %i, Containers are: %s", len(cont), cont)
 	}
-	fmt.Printf("Containers: %s \n", cont)
-}
-
-func TestContainerDeployment(t *testing.T) {
-	resp, ermsg, err := DeployNewContainer(testHost, testDeployment)
-
-	fmt.Printf("Docker Deploy Response: %s ermsg: %s err: %s\n", resp, ermsg, err)
 }
 
 func TestSendDockerCommand(t *testing.T) {
@@ -131,4 +123,15 @@ func TestSendDockerCommand(t *testing.T) {
 		t.Errorf("Reason: %s \n", msg)
 	}
 	fmt.Printf("Images: %s \n", msg)
+}
+
+func TestDeployNewContainer(t *testing.T) {
+	containerInfo, errFrom, err := DeployNewContainer(testHost, testDeployment)
+	if err != nil {
+		t.Errorf("TestDeployNewContainer error: %s thrown by: \n", err, errFrom)
+
+	}
+	if len(containerInfo.Warnings) != 0 {
+		t.Errorf("TestDeployNewContainer warning thrown: %+v \n", containerInfo.Warnings)
+	}
 }

@@ -15,17 +15,20 @@ func ReturnDockerHost(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	w.Write([]byte(fmt.Sprintf("%s", host)))
+	respBytes, err := json.Marshal(host)
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
+	w.Write(respBytes)
 }
 
 func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
-	
 	// 
 	// post request:
-	// FormValue: memory, memory_swap, user, container_name
+	// FormValue: memory, memory_swap, user, container_name, image,
+	// 				command, exposed_ports, ip
 	// 
-	
-	// Checking...
 	host, err := SelectHost()
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("%s", err)))

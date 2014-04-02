@@ -52,7 +52,11 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 		if err != nil {
 			return err
 		}
-		d.Host[index].Containers = len(containers)
+		containerCount := len(containers)
+		if containerCount < 1 {
+			containerCount = 1
+		}
+		d.Host[index].Containers = containerCount
 		err = MongoUpsert(MongoDockerHostCollection, 
 			bson.M{"Hostname": d.Host[index].Hostname}, 
 				d.Host[index])
@@ -83,13 +87,15 @@ func UpdateContainerNumberInHost(host Host) error {
 // increments the count of a single container config in mongo
 func IncrementContainerCount(update Host) error {
 	session, err := mgo.Dial(MongoDBAddress)
+	session.SetMode(mgo.Monotonic, true)
 	if err != nil {
 		return err
 	}
 	defer session.Close()
 	collection := session.DB(MongoDBName).C(MongoDockerHostCollection)
-	_, err = collection.Upsert(bson.M{"Hostname": update.Hostname},
-			bson.M{"$inc": bson.M{"Containers": 1}})
+	// that set thing is needed because Mongo.
+	_, err = collection.Upsert(bson.M{"hostname": update.Hostname},
+			bson.M{"$inc": bson.M{"containers": 1}})
 	return err
 }
 

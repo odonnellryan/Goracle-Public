@@ -2,7 +2,7 @@ package main
 
 import (
 	"testing"
-	"fmt"
+	// "fmt"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	//"encoding/json"
@@ -11,11 +11,11 @@ import (
 var testHostFile = DockerHosts{
 	Host: []Host{
 		{
-		Hostname: "local_testing",
+		Hostname: "local_testing", 
 		Address:  "http://127.0.0.1:8888/",
 		User:     "ryan",
 		Password: "test",
-		Containers: 0,
+		Containers: 1,
 		},
 	},
 }
@@ -23,18 +23,18 @@ var testHostFile = DockerHosts{
 var testHostTwo = DockerHosts{
 	Host: []Host{
 		{
-		Hostname: "local_testing",
+		Hostname: "local_testing2",
 		Address:  "http://127.0.0.1:8889/",
 		User:     "ryan",
 		Password: "test",
-		Containers: 1,
+		Containers: 2,
 		},
 		{
-		Hostname: "local_testing3",
+		Hostname: "local_testingthree",
 		Address:  "http://127.0.0.1:8888/",
 		User:     "ryan",
 		Password: "test",
-		Containers: 2,
+		Containers: 0,
 		},
 	},
 }
@@ -57,25 +57,26 @@ func TestUpdateAllDockerHostsInMongo(t *testing.T) {
 	}
 }
 
-// add a test to test and see if it updated
 func TestIncrementContainerCount(t *testing.T) {
-	err := IncrementContainerCount(testHostFile.Host[0])
-	if err != nil {
-		t.Errorf("IncrementContainerCount error: %s", err)
-	}
+	var result []Host
 	session, err := mgo.Dial(MongoDBAddress)
+	defer session.Close()
+	session.SetMode(mgo.Monotonic, true)
 	if err != nil {
-		t.Errorf("IncrementContainerCount error: %s", err)
+		t.Errorf("test IncrementContainerCount dial error: %s", err)
 	}
 	c := session.DB(MongoDBName).C(MongoDockerHostCollection)
-	result := Host{}
-	err = c.Find(bson.M{"Hostname": testHostFile.Host[0].Hostname}).One(&result)
+	err = IncrementContainerCount(testHostFile.Host[0])
 	if err != nil {
 		t.Errorf("IncrementContainerCount error: %s", err)
 	}
-	if result.Containers != testHostFile.Host[0].Containers {
-		t.Errorf("Increment Error Expected: %s, found: %s", 
-				result.Containers, testHostFile.Host[0].Containers)
+	err = c.Find(bson.M{"hostname": testHostFile.Host[0].Hostname}).All(&result)
+	if err != nil {
+		t.Errorf("IncrementContainerCount mongo find error: %s", err)
+	}
+	newContainerCount := testHostFile.Host[0].Containers + 1
+	if result[0].Containers != newContainerCount {
+		t.Errorf("IncrementContainerCount error. Expecting: %s, found: %s", 						newContainerCount, result[0].Containers)
 	}
 }
 
@@ -84,7 +85,7 @@ func TestSelectHostOne(t *testing.T) {
 	if err != nil {
 		t.Errorf("TestSelectHost error: %s host returned: %s", err, host)
 	}
-	fmt.Printf("SelectOne Host: %+v \n", host)
+	//fmt.Printf("SelectOne Host: %+v \n", host)
 }
 
 func TestUpdateMultipleMongo(t *testing.T) {
@@ -100,16 +101,14 @@ func TestUpdateMultipleMongo(t *testing.T) {
 }
 
 func TestSelectHostTwo(t *testing.T) {
-	dockerHosts, err := GetDockerHostInformation()
-	if err != nil {
-		t.Errorf("TestSelectHost error: %s host returned: %s", err, dockerHosts)
-	}
 	host, err := SelectHost()
 	if err != nil {
 		t.Errorf("TestSelectHost error: %s host returned: %s", err, host)
 	}
-	fmt.Printf("SelectTwo Host: %+v \n", host)
-	fmt.Printf("all dockerhosts: %+v \n", dockerHosts)
+	if host != testHostTwo.Host[1] {
+		t.Errorf("SelectHost error: expecting %+v got %+v", 
+					testHostTwo.Host[1], host)
+	}
 }
 
 

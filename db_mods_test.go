@@ -4,8 +4,7 @@ import (
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"testing"
-
-// "fmt"
+	"fmt"
 )
 
 var testCollection = "testCollection"
@@ -46,7 +45,7 @@ func TestMongoInsert(t *testing.T) {
 	if err != nil {
 		t.Errorf("Find: %s", err)
 	}
-	if result != testingQuery {
+	if (result != testingQuery) {
 		t.Errorf("Expected: %s, found: %s", testingQuery, result)
 	}
 }
@@ -63,14 +62,22 @@ func TestMongoUpsert(t *testing.T) {
 	c := session.DB(MongoDBName).C(testCollection)
 	err = MongoUpsert(testCollection, testingQuery, updateQuery)
 	if err != nil {
-		t.Errorf("Insert: %s", err)
+		t.Errorf("TestMongoUpsertError upsert: %s", err)
 	}
 	result := TestResult{}
 	err = c.Find(bson.M{"testtwo": "2"}).One(&result)
 	if err != nil {
-		t.Errorf("Find: %s", err)
+		t.Errorf("TestMongoUpsert error: %s", err)
 	}
 	if result != updateQuery {
-		t.Errorf("Expected: %s, found: %s", updateQuery, result)
+		t.Errorf("TestMongoUpsert Expected: %s, found: %s", updateQuery, result)
 	}
+}
+
+func TestGetDockerHostInformation(t *testing.T) {
+	dockerHosts, err := GetDockerHostInformation()
+	if err != nil {
+		t.Errorf("TestGetDockerHostInformation error: %s", err)
+	}
+	fmt.Printf("Dockerhosts: %+v \n", dockerHosts)
 }
