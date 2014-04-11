@@ -135,3 +135,7 @@ func TestDeployNewContainer(t *testing.T) {
 		t.Errorf("TestDeployNewContainer warning thrown: %+v \n", containerInfo.Warnings)
 	}
 }
+
+func TestSearchForImage(t *testing.T) {
+	
+}

@@ -58,7 +58,7 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 		}
 		d.Host[index].Containers = containerCount
 		err = MongoUpsert(MongoDockerHostCollection, 
-			bson.M{"Hostname": d.Host[index].Hostname}, 
+			bson.M{"hostname": d.Host[index].Hostname}, 
 				d.Host[index])
 		if err != nil {
 			return err
@@ -76,7 +76,7 @@ func UpdateContainerNumberInHost(host Host) error {
 	}
 	host.Containers = len(containers)
 	err = MongoUpsert(MongoDockerHostCollection, 
-			bson.M{"Hostname": host.Hostname}, 
+			bson.M{"hostname": host.Hostname}, 
 				host)
 	if err != nil {
 		return err

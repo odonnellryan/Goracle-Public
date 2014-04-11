@@ -10,13 +10,12 @@ import (
 	"encoding/pem"
 	"errors"
 	"log"
-	"net/http"
 )
 
-func GenerateKey(r *http.Request) (string, error) {
-	key, kerror := rsa.GenerateKey(rand.Reader, 2048)
-	if kerror != nil {
-		log.Println(ErrorMessages["EncodingError"])
+func GenerateKey() (string, error) {
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		log.Println("Error generating key: %s", err)
 		return "", errors.New(ErrorMessages["EncodingError"])
 	}
 	// save to pem
@@ -26,6 +25,6 @@ func GenerateKey(r *http.Request) (string, error) {
 			Bytes: x509.MarshalPKCS1PrivateKey(key),
 		},
 	)
-	// response, error
+	// key, error
 	return string(pemdata), nil
 }

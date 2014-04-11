@@ -28,11 +28,12 @@ func CheckCredentials(r *http.Request) bool {
 	if errr != nil {
 		return false
 	}
-	// Obvious, maybe.
+	// password pair: user:password
 	userPassPair := strings.Split(string(decoded), ":")
 	if len(userPassPair) != 2 {
 		return false
 	}
+	// currently, password and usernames are hard-coded into the binary
 	passwd := Password[userPassPair[0]]
 	if passwd == userPassPair[1] {
 		return true
@@ -40,27 +41,30 @@ func CheckCredentials(r *http.Request) bool {
 	return false
 }
 
-// wrapper to do IP + http basic authentication ;)
-func AuthorizationRequired(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
+func Authorization(w http.ResponseWriter, r *http.Request) bool {
 		// Format is ip:port. IP may be IPv6 format, e.g. ::1, which uses
 		// colons, so find the right most colon
 		portSeperatorIndex := strings.LastIndex(r.RemoteAddr, ":")
 		ipAddress := r.RemoteAddr[0:portSeperatorIndex]
-
 		if _, ok := AllowedIPs[ipAddress]; !ok {
 			log.Println("Denied access to '" + ipAddress + "'")
 			http.Error(w, ErrorMessages["addressError"], http.StatusForbidden)
-			return
+			return false
 		}
-
 		if CheckCredentials(r) {
-			h(w, r)
-			return
+			return true
 		}
+		return false
+}
 
+// wrapper to do IP + http basic authentication ;)
+func AuthorizationRequired(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if Authorization(w, r) {
+			h(w, r)
+		}
 		// Send if either credentials are invalid or none set
 		SendMissingCredentialsHeader(w, r)
+		return
 	}
 }

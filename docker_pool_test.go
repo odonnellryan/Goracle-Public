@@ -2,7 +2,7 @@ package main
 
 import (
 	"testing"
-	// "fmt"
+	//"fmt"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	//"encoding/json"
@@ -111,4 +111,23 @@ func TestSelectHostTwo(t *testing.T) {
 	}
 }
 
-
+func TestUpdateContainerNumberInHost(t *testing.T) {
+	var result []Host
+	session, err := mgo.Dial(MongoDBAddress)
+	defer session.Close()
+	session.SetMode(mgo.Monotonic, true)
+	err = UpdateContainerNumberInHost(testHostFile.Host[0])
+	if err != nil {
+		t.Errorf("TestUpdateContainerNumberInHost error: %s", err)
+	}
+	c := session.DB(MongoDBName).C(MongoDockerHostCollection)
+	err = c.Find(bson.M{"hostname": testHostFile.Host[0].Hostname}).All(&result)
+	if err != nil {
+		t.Errorf("TestUpdateContainerNumberInHost mongo find error: %s", err)
+	}
+	//fmt.Printf("result: %+v", result)
+	newContainerCount := 0
+	if result[0].Containers != newContainerCount {
+		t.Errorf("IncrementContainerCount error. Expecting: %s, found: %s", 						newContainerCount, result[0].Containers)
+	}
+}

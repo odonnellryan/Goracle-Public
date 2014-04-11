@@ -184,7 +184,6 @@ func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string,
 func SearchForImage(d Deployment, h Host) ([]byte, error) {
 	searchString := "images/search?term=" + d.Image
 	resp, err := SendDockerCommand(h, searchString, "GET", nil)
-
 	if err != nil {
 		return nil, err
 	}
@@ -213,6 +212,4 @@ func ListAllContainers(h Host) ([]ContainerInfo, error) {
 	return containers, nil
 }
 
-func StopContainerRequest() {
-
-}
+//func StopContainerRequest() { }
