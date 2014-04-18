@@ -76,9 +76,10 @@ type ContainerInfo struct {
 }
 
 // we aren't deploying containers with an nginx configuration to start.
-// the user will have to later choose a hostname and initiate a custom domain deployment.
+// the user will have to later choose a hostname and initiate 
+// a custom domain deployment.
 // deploying the container deploys it using docker's default hostname.
-// so nginx deployment will be its own thing
+// nginx deployment will be its own thing
 
 func BuildDeployment(d Deployment) Deployment {
 	d.Config = CreateContainer{
@@ -127,8 +128,6 @@ func SendDockerCommand(host Host, command string, method string, body io.Reader)
     }
 	return *response, nil
 }
-
-// can probably not make this use the http request?
 
 func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string, error) {
 

@@ -3,6 +3,9 @@ package main
 import (
 	"strings"
 	"fmt"
+	"crypto/sha512"
+	"io"
+	"encoding/hex"
 )
 
 func CommaStringToSlice(s string) []string {
@@ -24,4 +27,10 @@ func ParseMongoEndpoint(endpoint string) (string, string, string, error) {
 	port := endpoint[portSeperatorIndex+1 : slashIndex]
 	db := endpoint[slashIndex+1:]
 	return host, port, db, nil
+}
+
+func CryptToHex(s string) string {
+	h := sha512.New()
+	io.WriteString(h, s)
+	return hex.EncodeToString(h.Sum(nil))
 }

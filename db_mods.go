@@ -78,6 +78,7 @@ func GetDockerHostInformation() (DockerHosts, error) {
 	return dockerhosts, nil
 }
 
+// not yet implemented
 func WriteNginxConfig(n NginxConfig) error {
 	db := mysql.New("tcp", "", (NginxDBAddress + NginxDBPort),
 		NginxDBUser, NginxDBPassword, NginxDBName)

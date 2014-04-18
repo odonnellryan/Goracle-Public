@@ -7,13 +7,14 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	//"fmt"
 )
 
-// Blame the internet for this. sends the header asking for http basic
+// sends the header asking for http basic
 func SendMissingCredentialsHeader(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("WWW-Authenticate", `Basic realm="luma.im"`)
-	w.WriteHeader(401)
-	w.Write([]byte("401 Unauthorized\n"))
+	w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+	http.Error(w, "Not authorized", 401)
+	return
 }
 
 func CheckCredentials(r *http.Request) bool {
@@ -22,7 +23,6 @@ func CheckCredentials(r *http.Request) bool {
 	if len(authHead) != 2 || authHead[0] != "Basic" {
 		return false
 	}
-
 	// Gets the decoded stuff
 	decoded, errr := base64.StdEncoding.DecodeString(authHead[1])
 	if errr != nil {
@@ -33,35 +33,38 @@ func CheckCredentials(r *http.Request) bool {
 	if len(userPassPair) != 2 {
 		return false
 	}
-	// currently, password and usernames are hard-coded into the binary
+	// currently, password and usernames *are hard-coded 
+	// into the binary and not encrypted*
 	passwd := Password[userPassPair[0]]
-	if passwd == userPassPair[1] {
-		return true
+	if (len(userPassPair[0]) == 0) || (len(userPassPair[1]) == 0) {
+		return false
 	}
-	return false
+	return CryptToHex(passwd) == CryptToHex(userPassPair[1])
 }
 
-func Authorization(w http.ResponseWriter, r *http.Request) bool {
-		// Format is ip:port. IP may be IPv6 format, e.g. ::1, which uses
-		// colons, so find the right most colon
-		portSeperatorIndex := strings.LastIndex(r.RemoteAddr, ":")
-		ipAddress := r.RemoteAddr[0:portSeperatorIndex]
-		if _, ok := AllowedIPs[ipAddress]; !ok {
-			log.Println("Denied access to '" + ipAddress + "'")
-			http.Error(w, ErrorMessages["addressError"], http.StatusForbidden)
-			return false
-		}
-		if CheckCredentials(r) {
-			return true
-		}
-		return false
+func CheckIPAddress (r *http.Request) bool {
+	// Format is ip:port. IP may be IPv6 format, e.g. ::1, which uses
+	// colons, so find the right most colon
+	portSeperatorIndex := strings.LastIndex(r.RemoteAddr, ":")
+	ipAddress := r.RemoteAddr[0:portSeperatorIndex]
+	if _, ok := AllowedIPs[ipAddress]; !ok {
+		log.Printf("Denied access to: %s", r.RemoteAddr)
+		return AllowedIPs[ipAddress]
+	}
+	return AllowedIPs[ipAddress]
+}
+
+func CheckAuthorization(r *http.Request) bool {
+		return (CheckIPAddress(r)) && (CheckCredentials(r))
 }
 
 // wrapper to do IP + http basic authentication ;)
 func AuthorizationRequired(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if Authorization(w, r) {
+		// Check authorization (IP + HTTP Basic)
+		if CheckAuthorization(r) {
 			h(w, r)
+			return
 		}
 		// Send if either credentials are invalid or none set
 		SendMissingCredentialsHeader(w, r)
