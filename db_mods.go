@@ -4,7 +4,7 @@ package main
 
 import (
 	//"log"
-	"fmt"
+	//"fmt"
 	"github.com/ziutek/mymysql/mysql"
 	_ "github.com/ziutek/mymysql/native"
 	"labix.org/v2/mgo"
@@ -65,6 +65,7 @@ func MongoUpsert(collectionName string, query interface{},
 // (`id` INT(11) NOT NULL AUTO_INCREMENT,
 // `name` VARCHAR(255) NOT NULL DEFAULT '0',
 // `content` TEXT NOT NULL, `write` INT(11) NULL DEFAULT '0',
+// `hostname` varchar(255) NOT NULL UNIQUE,
 // `hash` VARCHAR(255) NOT NULL DEFAULT '0',
 // PRIMARY KEY (`id`), UNIQUE INDEX `hash` (`hash`)) ENGINE=InnoDB;")
 
@@ -87,7 +88,7 @@ func WriteNginxConfig(n NginxConfig) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("name: %s, content: %s, write %s, hash %s", n.configName, n.configFile, 1, n.configHash)
+	// fmt.Printf("name: %s, content: %s, write %s, hash %s", n.configName, n.configFile, 1, n.configHash)
 	stmt.Run(n.configName, n.configFile, 1, n.configValues.hostname, n.configHash)
 	//
 	if err != nil {
@@ -100,6 +101,6 @@ func WriteNginxConfig(n NginxConfig) error {
 	return nil
 }
 
-func SearchForNginxConfig(hostname string) {
+func GetNginxConfig(hostname string) {
 
 }

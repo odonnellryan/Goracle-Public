@@ -136,6 +136,35 @@ func TestDeployNewContainer(t *testing.T) {
 	}
 }
 
-func TestSearchForImage(t *testing.T) {
+func TestInspectContainer(t *testing.T) {
+	containerInfo, errFrom, err := DeployNewContainer(testHost, testDeployment)
+	if err != nil {
+		t.Errorf("TestInspectContainer error: %s thrown by: \n", err, errFrom)
 
+	}
+	if len(containerInfo.Warnings) != 0 {
+		t.Errorf("TestInspectContainer warning thrown: %+v \n", containerInfo.Warnings)
+	}
+	image, err := InspectContainer(testHost, containerInfo.Id)
+	if err != nil {
+		t.Errorf("TestInspectContainer error: %s \n", err)
+	}
+	if container.Image == "" {
+		t.Errorf("TestInspectContainer create response: %+v inspect response %+v \n", containerInfo, container)
+	}
 }
+
+// disabled for now, takes a long time and we probably
+// don't really need it really (just searches the docker repo)
+//func TestSearchForImage(t *testing.T) {
+//resp, err := SearchForImage(testHost, testDeployment)
+//if err != nil {
+//t.Errorf("TestSearchForImage error: %s resp: %s \n", err, resp)
+//}
+// for now, we're just testing that something is being returned
+// i'll probably just disable this test, because it takes a long time
+// (has to query the docker repo, eventually we'll be querying our own repo)
+//if resp[0].Name == "" {
+//t.Errorf("TestSearchForImage no response?: %s\n", resp[0].Name)
+//}
+//}

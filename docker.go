@@ -77,6 +77,14 @@ type ContainerInfo struct {
 	SizeRootFs int
 }
 
+type SearchResponse struct {
+	Description string
+	is_official bool
+	is_trusted  bool
+	Name        string
+	star_count  int
+}
+
 // we aren't deploying containers with an nginx configuration to start.
 // the user will have to later choose a hostname and initiate
 // a custom domain deployment.
@@ -182,23 +190,26 @@ func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string,
 	return deployedInfo, "", nil
 }
 
-func SearchForImage(d Deployment, h Host) ([]byte, error) {
-	searchString := "images/search?term=" + d.Image
-	resp, err := SendDockerCommand(h, searchString, "GET", nil)
-	if err != nil {
-		return nil, err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
-}
+// we don't need this right now. searches the repo for an image.
+//func SearchForImage(h Host, d Deployment) ([]SearchResponse, error) {
+//searchResp := []SearchResponse{}
+//command := "images/search?term=" + d.Image
+//resp, err := SendDockerCommand(h, command, "GET", nil)
+//if err != nil {
+//	return nil, err
+//}
+//decode := json.NewDecoder(resp.Body)
+//err = decode.Decode(&searchResp)
+//if err != nil {
+//	return searchResp, err
+//}
+//return searchResp, nil
+//}
 
 func ListAllContainers(h Host) ([]ContainerInfo, error) {
-	listString := "containers/json?all=1"
 	containers := []ContainerInfo{}
-	resp, err := SendDockerCommand(h, listString, "GET", nil)
+	command := "containers/json?all=1"
+	resp, err := SendDockerCommand(h, command, "GET", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -210,19 +221,49 @@ func ListAllContainers(h Host) ([]ContainerInfo, error) {
 	return containers, nil
 }
 
-func InspectContainer(h Host, containerID string) (ContainerInfo, error) {
-	containers := ContainerInfo{}
-	inspectCommand := "/containers/" + containerID + "/json"
-	resp, err := SendDockerCommand(h, inspectCommand, "GET", nil)
+func InspectContainer(h Host, containerID string) (CreateContainer, error) {
+	containerInfo := CreateContainer{}
+	command := "containers/" + containerID + "/json"
+	resp, err := SendDockerCommand(h, command, "GET", nil)
 	if err != nil {
-		return containers, err
+		return containerInfo, err
 	}
 	decode := json.NewDecoder(resp.Body)
-	err = decode.Decode(&containers)
+	err = decode.Decode(&containerInfo)
 	if err != nil {
-		return containers, err
+		return containerInfo, err
 	}
-	return containers, nil
+	return containerInfo, nil
+}
+
+func DeleteImage(h Host, c ContainerInfo) (http.Response, error) {
+	nulResp := http.Response{}
+	command := "images/" + c.Image
+	resp, err := SendDockerCommand(h, command, "GET", nil)
+	if err != nil {
+		return nulResp, err
+	}
+	return resp, nil
+}
+
+func DeleteContainer(h Host, id string) (http.Response, error) {
+	nulResp := http.Response{}
+	command := "containers/" + id
+	resp, err := SendDockerCommand(h, command, "DELETE", nil)
+	if err != nil {
+		return nulResp, err
+	}
+	return resp, nil
+}
+
+func StopContainer(h Host, id string) (http.Response, error) {
+	nulResp := http.Response{}
+	command := "containers/" + id + "/stop?t=5"
+	resp, err := SendDockerCommand(h, command, "POST", nil)
+	if err != nil {
+		return nulResp, err
+	}
+	return resp, nil
 }
 
 //func StopContainerRequest() { }

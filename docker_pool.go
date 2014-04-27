@@ -54,6 +54,7 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 			return err
 		}
 		containerCount := len(containers)
+		// i forget why, shouldn't matter..
 		if containerCount < 1 {
 			containerCount = 1
 		}
@@ -64,7 +65,6 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 		if err != nil {
 			return err
 		}
-		return nil
 	}
 	return nil
 }
@@ -137,8 +137,8 @@ func GetDockerHostByHostname(hostname string) (Host, error) {
 }
 
 func SelectHost() (Host, error) {
-	dockerHosts, err := GetDockerHostInformation()
 	host := Host{}
+	dockerHosts, err := GetDockerHostInformation()
 	if err != nil {
 		return host, err
 	}
@@ -148,6 +148,9 @@ func SelectHost() (Host, error) {
 	number := dockerHosts.Host[0].Containers
 	hostIndex := 0
 	for index := range dockerHosts.Host {
+		if dockerHosts.Host[index].Containers == 1 {
+			return dockerHosts.Host[index], nil
+		}
 		if dockerHosts.Host[index].Containers < number {
 			number = dockerHosts.Host[index].Containers
 			hostIndex = index

@@ -5,6 +5,7 @@ printf "ryan:$(openssl passwd -crypt test)\n" >> /etc/nginx/htpassword
 nginx
 mongod --smallfiles > /var/log/mongo.log 2>&1 &
 mysqld > /var/log/mysql.log 2>&1 &
+sleep 2
 python write_from_db.py > /var/log/pywrite.log 2>&1 &
 goracle > /var/log/goracle.log 2>&1 &
 wrapdocker > /var/log/docker.log 2>&1 &
@@ -18,4 +19,4 @@ go test -coverprofile=coverage.out
 go tool cover -func=coverage.out
 # uncomment the below if you wish to enter the console 
 # for the test container at the end of testing
-/bin/bash
+#/bin/bash

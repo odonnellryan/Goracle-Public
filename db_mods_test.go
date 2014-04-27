@@ -106,3 +106,7 @@ func TestWriteNginxConfig(t *testing.T) {
 		t.Errorf("TestWriteNginxConfig write config error: %s", err)
 	}
 }
+
+func TestGetNginxConfig(t *testing.T) {
+
+}

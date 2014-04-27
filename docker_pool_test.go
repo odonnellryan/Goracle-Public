@@ -131,3 +131,13 @@ func TestUpdateContainerNumberInHost(t *testing.T) {
 		t.Errorf("IncrementContainerCount error. Expecting: %s, found: %s", newContainerCount, result[0].Containers)
 	}
 }
+
+func TestGetDockerHostByHostname(t *testing.T) {
+	host, err := GetDockerHostByHostname("local_testing")
+	if err != nil {
+		t.Errorf("TestGetDockerHostByHostname error: %s", err)
+	}
+	if host.Hostname != "local_testing" {
+		t.Errorf("TestGetDockerHostByHostname returned wrong host: %s", host)
+	}
+}
