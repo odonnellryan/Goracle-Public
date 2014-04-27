@@ -25,6 +25,5 @@ func GenerateKey() (string, error) {
 			Bytes: x509.MarshalPKCS1PrivateKey(key),
 		},
 	)
-	// key, error
 	return string(pemdata), nil
 }

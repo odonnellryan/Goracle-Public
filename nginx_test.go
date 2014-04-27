@@ -6,29 +6,21 @@ import (
 
 var testConfigValues = nginxConfigValues{"hostname", "localhost", "9999"}
 
-// hostname, (upstreamServer + upstreamPort), hostname, hostname
-var testConfigFile = `
-    upstream hostname  {
-      localhost:9999
-    }
-    server {
-      listen 80; 
-      server_name hostname;
-      location / {
-        proxy_pass  http://hostname;
-      }
-    }
-`
+var testConfigFile = "upstream hostname { server localhost:9999; } server { listen 80; server_name hostname; location / { proxy_pass http://hostname; }}"
+var testConfigHash = CryptToHex(testConfigFile)
 
 var testNginxConfig = NginxConfig{
 	"hostname.GOOD",
+	testConfigHash,
 	testConfigFile,
 	testConfigValues,
 }
 
 func TestBuildConfig(t *testing.T) {
 	compareConfig := BuildNginxConfig(testConfigValues)
-	if compareConfig != testNginxConfig {
-		t.Errorf("Got %+v, expecting %+v", compareConfig, testNginxConfig)
+	testConfigHash := CryptToHex(testConfigFile)
+	configWithHash := fmt.Sprintf("#%s\n%s",testConfigHash,testConfigFile)
+	if compareConfig.configFile != testNginxConfig.configFile {
+		t.Errorf("Got: \n %+v \n expecting: \n %+v", compareConfig.configFile, testNginxConfig.configFile)
 	}
 }

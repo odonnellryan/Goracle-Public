@@ -6,7 +6,7 @@ import (
 	//"log"
 	"fmt"
 	"github.com/ziutek/mymysql/mysql"
-	_ "github.com/ziutek/mymysql/native" // Native engine
+	_ "github.com/ziutek/mymysql/native"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 )
@@ -15,6 +15,7 @@ type DockerDatabaseWrite struct {
 	//
 	// future
 	// RO: no idea what this is for, if you remember comment.
+	// RO: 04/19/2014: still not sure.
 	//
 	Username string
 	UserId   string
@@ -78,29 +79,47 @@ func GetDockerHostInformation() (DockerHosts, error) {
 	return dockerhosts, nil
 }
 
+//
+// mysql schema - this is running on the LB so we won't be 
+// creating it here (it's created with the python script if it doesn't exist)
+//
+//"CREATE TABLE `configs` 
+// (`id` INT(11) NOT NULL AUTO_INCREMENT, 
+// `name` VARCHAR(255) NOT NULL DEFAULT '0', 
+// `content` TEXT NOT NULL, `write` INT(11) NULL DEFAULT '0', 
+// `hash` VARCHAR(255) NOT NULL DEFAULT '0', 
+// PRIMARY KEY (`id`), UNIQUE INDEX `hash` (`hash`)) ENGINE=InnoDB;")
+
 // not yet implemented
 func WriteNginxConfig(n NginxConfig) error {
-	db := mysql.New("tcp", "", (NginxDBAddress + NginxDBPort),
+	db := mysql.New("tcp", "", (NginxDBAddress + ":" + NginxDBPort),
 		NginxDBUser, NginxDBPassword, NginxDBName)
 	err := db.Connect()
 	if err != nil {
-		fmt.Println(err)
+		return err
+	}
+	// err = CreateMysqlTableConfigs(db)
+	// if err != nil {
+		// return err
+	// }
+	stmt, err := db.Prepare("INSERT INTO `configs` (`name`, `content`, `write`, `hostname`, `hash`) VALUES (?, ?, ?, ?, ?)")
+	//  ON DUPLICATE KEY UPDATE name=?, content=?, write=?
+	if err != nil {
+		return err
+	}
+	fmt.Printf("name: %s, content: %s, write %s, hash %s", n.configName, n.configFile, 1, n.configHash)
+	stmt.Run(n.configName, n.configFile, 1, n.configValues.hostname, n.configHash)
+	//
+	if err != nil {
+		return err
 	}
 	err = db.Close()
 	if err != nil {
-		fmt.Println(err)
-	}
-	stmt, err := db.Prepare(`INSERT INTO configs 
-							(name, content, write, hash) 
-							VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE 
-							(name, content, write) = VALUES 
-							(name, content, write)`)
-	if err != nil {
-		fmt.Println(err)
-	}
-	_, err = stmt.Run()
-	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	return nil
+}
+
+func SearchForNginxConfig(hostname string) {
+	
 }

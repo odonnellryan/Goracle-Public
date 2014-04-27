@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"crypto/sha512"
 	"io"
+	//"bytes"
 	"encoding/hex"
 )
 

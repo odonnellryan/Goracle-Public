@@ -4,7 +4,8 @@ import (
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"testing"
-	"fmt"
+	"github.com/ziutek/mymysql/mysql"
+	// "fmt"
 )
 
 var testCollection = "testCollection"
@@ -79,5 +80,30 @@ func TestGetDockerHostInformation(t *testing.T) {
 	if err != nil {
 		t.Errorf("TestGetDockerHostInformation error: %s", err)
 	}
-	fmt.Printf("Dockerhosts: %+v \n", dockerHosts)
+	if len(dockerHosts.Host) != 0 {
+		t.Errorf("TestGetDockerHostInformation returned hosts?: %s", dockerHosts)
+	}
 }
+
+func TestMySQLConnection(t *testing.T) {
+	db := mysql.New("tcp", "", (NginxDBAddress + ":" + NginxDBPort),
+		NginxDBUser, NginxDBPassword, NginxDBName)
+	err := db.Connect()
+	if err != nil {
+		t.Errorf("TestMySQLConnection connect error: %s", err)
+	}
+	err = db.Close()
+	if err != nil {
+		t.Errorf("TestMySQLConnection close error: %s", err)
+	}
+}
+
+func TestWriteNginxConfig(t *testing.T) {
+	testConfigValues := nginxConfigValues{"hostname", "localhost", "9999"}
+	testConfig := BuildNginxConfig(testConfigValues)
+	err := WriteNginxConfig(testConfig)
+	if err != nil {
+		t.Errorf("TestWriteNginxConfig write config error: %s", err)
+	}
+}
+
