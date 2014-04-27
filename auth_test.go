@@ -1,10 +1,10 @@
 package main
 
 import (
-	"testing"
-	"net/http/httptest"
-	"net/http"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 	//"encoding/json"
 	//"fmt"
 )
@@ -113,7 +113,7 @@ func TestAuthorizationRequired(t *testing.T) {
 		t.Errorf("TestAuthorizationRequired ioutil error: %s", err)
 	}
 	if !(resp.StatusCode == 401) {
-		t.Errorf("TestAuthorizationRequired passed unexpectedly %d - %s", 
+		t.Errorf("TestAuthorizationRequired passed unexpectedly %d - %s",
 			resp.StatusCode, actualResp)
 	}
 	// use the request we setup to modify http headers so we can
@@ -128,8 +128,8 @@ func TestAuthorizationRequired(t *testing.T) {
 	if err != nil {
 		t.Errorf("TestAuthorizationRequired ioutil error: %s", err)
 	}
-	if (resp.StatusCode == 401) {
-		t.Errorf("TestAuthorizationRequired passed unexpectedly %d - %s", 
+	if resp.StatusCode == 401 {
+		t.Errorf("TestAuthorizationRequired passed unexpectedly %d - %s",
 			resp.StatusCode, actualResp)
 	}
 }

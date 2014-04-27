@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/ziutek/mymysql/mysql"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"testing"
-	"github.com/ziutek/mymysql/mysql"
 	// "fmt"
 )
 
@@ -46,7 +46,7 @@ func TestMongoInsert(t *testing.T) {
 	if err != nil {
 		t.Errorf("Find: %s", err)
 	}
-	if (result != testingQuery) {
+	if result != testingQuery {
 		t.Errorf("Expected: %s, found: %s", testingQuery, result)
 	}
 }
@@ -106,4 +106,3 @@ func TestWriteNginxConfig(t *testing.T) {
 		t.Errorf("TestWriteNginxConfig write config error: %s", err)
 	}
 }
-

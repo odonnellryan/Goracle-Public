@@ -85,7 +85,7 @@ func TestHTTPToDocker(t *testing.T) {
 
 func TestDockerPull(t *testing.T) {
 	resp, err := SendDockerCommand(testHost,
-				"images/create?fromImage=docker-test-image", "POST", nil)
+		"images/create?fromImage=docker-test-image", "POST", nil)
 	if err != nil {
 		t.Errorf("Error: %s \n", err)
 	}
@@ -116,7 +116,7 @@ func TestSendDockerCommand(t *testing.T) {
 	}
 	msg, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-			t.Errorf("Error: %s \n", err)
+		t.Errorf("Error: %s \n", err)
 	}
 	if resp.StatusCode != 200 {
 		t.Errorf("Unexpected Status Code: %s \n", resp.StatusCode)
@@ -137,5 +137,5 @@ func TestDeployNewContainer(t *testing.T) {
 }
 
 func TestSearchForImage(t *testing.T) {
-	
+
 }

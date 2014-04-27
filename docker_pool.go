@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	//"fmt"
-	"os"
+	"errors"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
+	"os"
 	//"strconv"
 )
 
@@ -36,7 +37,7 @@ func GetDockerHosts() (DockerHosts, error) {
 	return dockerHosts, nil
 }
 
-// updates all hosts in the mongo db
+// gets the hosts then sends them to be updated in mongo db
 func UpdateAllDockerHostsInMongo() error {
 	dockerHosts, err := GetDockerHosts()
 	if err != nil {
@@ -57,9 +58,9 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 			containerCount = 1
 		}
 		d.Host[index].Containers = containerCount
-		err = MongoUpsert(MongoDockerHostCollection, 
-			bson.M{"hostname": d.Host[index].Hostname}, 
-				d.Host[index])
+		err = MongoUpsert(MongoDockerHostCollection,
+			bson.M{"hostname": d.Host[index].Hostname},
+			d.Host[index])
 		if err != nil {
 			return err
 		}
@@ -75,9 +76,9 @@ func UpdateContainerNumberInHost(host Host) error {
 		return err
 	}
 	host.Containers = len(containers)
-	err = MongoUpsert(MongoDockerHostCollection, 
-			bson.M{"hostname": host.Hostname}, 
-				host)
+	err = MongoUpsert(MongoDockerHostCollection,
+		bson.M{"hostname": host.Hostname},
+		host)
 	if err != nil {
 		return err
 	}
@@ -95,8 +96,44 @@ func IncrementContainerCount(update Host) error {
 	collection := session.DB(MongoDBName).C(MongoDockerHostCollection)
 	// that set thing is needed because Mongo.
 	_, err = collection.Upsert(bson.M{"hostname": update.Hostname},
-			bson.M{"$inc": bson.M{"containers": 1}})
+		bson.M{"$inc": bson.M{"containers": 1}})
 	return err
+}
+
+func GetDockerHostInformation() (DockerHosts, error) {
+	//
+	// gets all dockerhost information from the mongo DB..
+	//
+	dockerhosts := DockerHosts{}
+	host := []Host{}
+	// mongo db host, set in config.go
+	session, err := mgo.Dial(MongoDBAddress)
+	session.SetMode(mgo.Monotonic, true)
+	if err != nil {
+		return dockerhosts, err
+	}
+	defer session.Close()
+	collection := session.DB(MongoDBName).C(MongoDockerHostCollection)
+	err = collection.Find(nil).All(&host)
+	if err != nil {
+		return dockerhosts, err
+	}
+	dockerhosts.Host = host
+	return dockerhosts, nil
+}
+
+func GetDockerHostByHostname(hostname string) (Host, error) {
+	host := Host{}
+	dockerHosts, err := GetDockerHostInformation()
+	if err != nil {
+		return host, err
+	}
+	for index := range dockerHosts.Host {
+		if dockerHosts.Host[index].Hostname == hostname {
+			return dockerHosts.Host[index], nil
+		}
+	}
+	return host, errors.New("Docker host not found.")
 }
 
 func SelectHost() (Host, error) {
@@ -116,6 +153,5 @@ func SelectHost() (Host, error) {
 			hostIndex = index
 		}
 	}
-	host = dockerHosts.Host[hostIndex]
-	return host, nil
+	return dockerHosts.Host[hostIndex], nil
 }

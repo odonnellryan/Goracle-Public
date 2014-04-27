@@ -36,7 +36,7 @@ func BuildNginxConfig(values nginxConfigValues) NginxConfig {
 	config := fmt.Sprintf(HttpConfigFile, values.hostname, (values.upstreamServer + ":" + values.upstreamPort),
 		values.hostname, values.hostname)
 	configHash := CryptToHex(config)
-	configWithHash := fmt.Sprintf("#%s\n%s",configHash,config)
+	configWithHash := fmt.Sprintf("#%s\n%s", configHash, config)
 	// nginx is set to only load *.GOOD
 	return NginxConfig{(values.hostname + ".GOOD"), configHash, configWithHash, values}
 }

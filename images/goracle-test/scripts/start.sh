@@ -10,6 +10,7 @@ goracle > /var/log/goracle.log 2>&1 &
 wrapdocker > /var/log/docker.log 2>&1 &
 # nginx needs to own the socket for docker so we con
 # wrap it in http basic
+# give docker a bit to initialize...
 sleep 5
 chown www-data /var/run/docker.sock
 # go coverage/test tools

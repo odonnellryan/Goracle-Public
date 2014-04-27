@@ -1,10 +1,10 @@
 package main
 
 import (
-	"strings"
-	"fmt"
 	"crypto/sha512"
+	"fmt"
 	"io"
+	"strings"
 	//"bytes"
 	"encoding/hex"
 )
@@ -19,7 +19,7 @@ func ParseMongoEndpoint(endpoint string) (string, string, string, error) {
 		err := fmt.Errorf("Invalid format of mongo endpoint. Correct syntax is host:port/db")
 		return "", "0", "", err
 	}
-	host := endpoint[0 : portSeperatorIndex]
+	host := endpoint[0:portSeperatorIndex]
 	slashIndex := strings.Index(endpoint, "/")
 	if slashIndex < 1 {
 		err := fmt.Errorf("Invalid format of mongo endpoint. Correct syntax is host:port/db")

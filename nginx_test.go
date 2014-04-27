@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"fmt"
 )
 
 var testConfigValues = nginxConfigValues{"hostname", "localhost", "9999"}
@@ -20,7 +21,8 @@ func TestBuildConfig(t *testing.T) {
 	compareConfig := BuildNginxConfig(testConfigValues)
 	testConfigHash := CryptToHex(testConfigFile)
 	configWithHash := fmt.Sprintf("#%s\n%s",testConfigHash,testConfigFile)
-	if compareConfig.configFile != testNginxConfig.configFile {
-		t.Errorf("Got: \n %+v \n expecting: \n %+v", compareConfig.configFile, testNginxConfig.configFile)
+	if compareConfig.configFile != configWithHash {
+		t.Errorf("Got: \n %+v \n expecting: \n %+v", 
+		          compareConfig.configFile, configWithHash)
 	}
 }

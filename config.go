@@ -19,7 +19,7 @@ var (
 )
 
 // the below is for this Goracle HTTP server
-var Password = map[string]string {
+var Password = map[string]string{
 	"ryan": "test",
 }
 

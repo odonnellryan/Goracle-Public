@@ -11,11 +11,11 @@ import (
 var testHostFile = DockerHosts{
 	Host: []Host{
 		{
-		Hostname: "local_testing", 
-		Address:  "http://127.0.0.1:8888/",
-		User:     "ryan",
-		Password: "test",
-		Containers: 1,
+			Hostname:   "local_testing",
+			Address:    "http://127.0.0.1:8888/",
+			User:       "ryan",
+			Password:   "test",
+			Containers: 1,
 		},
 	},
 }
@@ -23,18 +23,18 @@ var testHostFile = DockerHosts{
 var testHostTwo = DockerHosts{
 	Host: []Host{
 		{
-		Hostname: "local_testing2",
-		Address:  "http://127.0.0.1:8889/",
-		User:     "ryan",
-		Password: "test",
-		Containers: 2,
+			Hostname:   "local_testing2",
+			Address:    "http://127.0.0.1:8889/",
+			User:       "ryan",
+			Password:   "test",
+			Containers: 2,
 		},
 		{
-		Hostname: "local_testingthree",
-		Address:  "http://127.0.0.1:8888/",
-		User:     "ryan",
-		Password: "test",
-		Containers: 0,
+			Hostname:   "local_testingthree",
+			Address:    "http://127.0.0.1:8888/",
+			User:       "ryan",
+			Password:   "test",
+			Containers: 0,
 		},
 	},
 }
@@ -76,7 +76,7 @@ func TestIncrementContainerCount(t *testing.T) {
 	}
 	newContainerCount := testHostFile.Host[0].Containers + 1
 	if result[0].Containers != newContainerCount {
-		t.Errorf("IncrementContainerCount error. Expecting: %s, found: %s", 						newContainerCount, result[0].Containers)
+		t.Errorf("IncrementContainerCount error. Expecting: %s, found: %s", newContainerCount, result[0].Containers)
 	}
 }
 
@@ -90,12 +90,12 @@ func TestSelectHostOne(t *testing.T) {
 
 func TestUpdateMultipleMongo(t *testing.T) {
 	for index := range testHostTwo.Host {
-		err := MongoUpsert(MongoDockerHostCollection, 
-			bson.M{"Hostname": testHostTwo.Host[index].Hostname}, 
+		err := MongoUpsert(MongoDockerHostCollection,
+			bson.M{"Hostname": testHostTwo.Host[index].Hostname},
 			testHostTwo.Host[index])
 		if err != nil {
 			t.Errorf("TestUpdateMultipleMongo error: %s host: %s", err,
-					testHostTwo.Host[index])
+				testHostTwo.Host[index])
 		}
 	}
 }
@@ -106,8 +106,8 @@ func TestSelectHostTwo(t *testing.T) {
 		t.Errorf("TestSelectHost error: %s host returned: %s", err, host)
 	}
 	if host != testHostTwo.Host[1] {
-		t.Errorf("SelectHost error: expecting %+v got %+v", 
-					testHostTwo.Host[1], host)
+		t.Errorf("SelectHost error: expecting %+v got %+v",
+			testHostTwo.Host[1], host)
 	}
 }
 
@@ -128,6 +128,6 @@ func TestUpdateContainerNumberInHost(t *testing.T) {
 	//fmt.Printf("result: %+v", result)
 	newContainerCount := 0
 	if result[0].Containers != newContainerCount {
-		t.Errorf("IncrementContainerCount error. Expecting: %s, found: %s", 						newContainerCount, result[0].Containers)
+		t.Errorf("IncrementContainerCount error. Expecting: %s, found: %s", newContainerCount, result[0].Containers)
 	}
 }

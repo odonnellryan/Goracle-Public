@@ -4,6 +4,17 @@ import os
 import time
 import subprocess
 import pwd
+from datetime import datetime
+import sys
+
+# append datetime to all prints (so I don't have to replace them now)
+old_f = sys.stdout
+
+
+class F:
+    def write(self, x):
+        old_f.write(x.replace("\n", " [%s]\n" % str(datetime.now())))
+sys.stdout = F()
 
 USERNAME = "ryan"
 PASSWORD = "test"
@@ -17,7 +28,7 @@ TABLSTRC = """CREATE TABLE IF NOT EXISTS {0} (
           `name` varchar(2555) DEFAULT NULL,
           `content` varchar(2555) DEFAULT NULL,
           `hostname` varchar(255) NOT NULL UNIQUE,
-          `hash` VARCHAR(2555) NOT NULL,
+          `hash` VARCHAR(128) NOT NULL,
           `write` int(11) NOT NULL DEFAULT '0',
            PRIMARY KEY (`id`)
            ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;""".format(TABLNAME)

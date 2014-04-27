@@ -33,7 +33,7 @@ func CheckCredentials(r *http.Request) bool {
 	if len(userPassPair) != 2 {
 		return false
 	}
-	// currently, password and usernames *are hard-coded 
+	// currently, password and usernames *are hard-coded
 	// into the binary and not encrypted*
 	passwd := Password[userPassPair[0]]
 	if (len(userPassPair[0]) == 0) || (len(userPassPair[1]) == 0) {
@@ -42,7 +42,7 @@ func CheckCredentials(r *http.Request) bool {
 	return CryptToHex(passwd) == CryptToHex(userPassPair[1])
 }
 
-func CheckIPAddress (r *http.Request) bool {
+func CheckIPAddress(r *http.Request) bool {
 	// Format is ip:port. IP may be IPv6 format, e.g. ::1, which uses
 	// colons, so find the right most colon
 	portSeperatorIndex := strings.LastIndex(r.RemoteAddr, ":")
@@ -55,7 +55,7 @@ func CheckIPAddress (r *http.Request) bool {
 }
 
 func CheckAuthorization(r *http.Request) bool {
-		return (CheckIPAddress(r)) && (CheckCredentials(r))
+	return (CheckIPAddress(r)) && (CheckCredentials(r))
 }
 
 // wrapper to do IP + http basic authentication ;)

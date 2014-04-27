@@ -3,13 +3,13 @@ package main
 import (
 	"testing"
 	//"fmt"
-	"net/http"
-	"net/http/httptest"
+	"bytes"
 	"io/ioutil"
 	"log"
-	"bytes"
+	"net/http"
+	"net/http/httptest"
 	"strings"
-	)
+)
 
 var testMessage = []byte("testing the middleware")
 
@@ -21,7 +21,7 @@ func TestHandlers(t *testing.T) {
 	// redirect logging to a buffer for testing
 	var logBuffer bytes.Buffer
 	log.SetOutput(&logBuffer)
-    // set up the dispatcher testing
+	// set up the dispatcher testing
 	testDispatcher := &RequestDispatcher{make(map[string]*http.ServeMux)}
 	testDispatcher.AddHandler("POST", "/test/", testRoute)
 	// test the logging
@@ -33,7 +33,7 @@ func TestHandlers(t *testing.T) {
 	if err != nil {
 		t.Errorf("TestHandlers client Get error: %s \n", err)
 	}
-	req, err := http.NewRequest("POST", (server.URL+"/test/"), nil)
+	req, err := http.NewRequest("POST", (server.URL + "/test/"), nil)
 	if err != nil {
 		t.Errorf("TestHandlers NewRequest error: %s \n", err)
 	}

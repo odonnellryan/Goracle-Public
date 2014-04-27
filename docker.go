@@ -8,6 +8,7 @@ import (
 	//"log"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	//"net/url"
@@ -18,6 +19,7 @@ import (
 //
 
 type Deployment struct {
+	DockerHost    string
 	User          string
 	ContainerName string
 	Image         string
@@ -76,7 +78,7 @@ type ContainerInfo struct {
 }
 
 // we aren't deploying containers with an nginx configuration to start.
-// the user will have to later choose a hostname and initiate 
+// the user will have to later choose a hostname and initiate
 // a custom domain deployment.
 // deploying the container deploys it using docker's default hostname.
 // nginx deployment will be its own thing
@@ -109,23 +111,23 @@ func SendDockerCommand(host Host, command string, method string, body io.Reader)
 	// url stuff yeah
 	// the client woo
 	nulResp := http.Response{}
-    client := &http.Client{}
-    response, err := client.Get(host.Address)
-    if err != nil {
-            return nulResp, err
-    }
-    // closes the connection
-    defer response.Body.Close()
-    request, err := http.NewRequest(method, (host.Address + command), body)
-    if err != nil {
-            return nulResp, err
-    }
-    request.Header.Set("Content-Type", "application/json")
-    request.SetBasicAuth(host.User, host.Password)
-    response, err = client.Do(request)
-    if err != nil {
-            return nulResp, err
-    }
+	client := &http.Client{}
+	response, err := client.Get(host.Address)
+	if err != nil {
+		return nulResp, err
+	}
+	// closes the connection
+	defer response.Body.Close()
+	request, err := http.NewRequest(method, (host.Address + command), body)
+	if err != nil {
+		return nulResp, err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	request.SetBasicAuth(host.User, host.Password)
+	response, err = client.Do(request)
+	if err != nil {
+		return nulResp, err
+	}
 	return *response, nil
 }
 
@@ -156,10 +158,10 @@ func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string,
 		if err != nil {
 			return deployedInfo, "", err
 		}
-		fmt.Printf("response error: %s \n", msg)
+		return deployedInfo, "Error with send Docker command response.", errors.New(string(msg))
 	}
 	if err != nil {
-		return deployedInfo, "", err
+		return deployedInfo, "Error with send Docker command.", err
 	}
 	decode := json.NewDecoder(resp.Body)
 	err = decode.Decode(&deployedInfo)
@@ -167,7 +169,7 @@ func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string,
 		return deployedInfo, "json decode", err
 	}
 	deployment.DeployedInfo = deployedInfo
-	// log it
+	// log it/enter to mongo
 	err = MongoInsert(MongoDeployCollection, deployment)
 	if err != nil {
 		return deployedInfo, "mongo error", err
@@ -205,8 +207,20 @@ func ListAllContainers(h Host) ([]ContainerInfo, error) {
 	if err != nil {
 		return containers, err
 	}
+	return containers, nil
+}
+
+func InspectContainer(h Host, containerID string) (ContainerInfo, error) {
+	containers := ContainerInfo{}
+	inspectCommand := "/containers/" + containerID + "/json"
+	resp, err := SendDockerCommand(h, inspectCommand, "GET", nil)
 	if err != nil {
-		return nil, err
+		return containers, err
+	}
+	decode := json.NewDecoder(resp.Body)
+	err = decode.Decode(&containers)
+	if err != nil {
+		return containers, err
 	}
 	return containers, nil
 }

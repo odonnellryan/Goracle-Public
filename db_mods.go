@@ -53,41 +53,19 @@ func MongoUpsert(collectionName string, query interface{},
 	defer session.Close()
 	collection := session.DB(MongoDBName).C(collectionName)
 	// that set thing is needed because Mongo.
-	_, err = collection.Upsert(query, bson.M{"$set":update})
+	_, err = collection.Upsert(query, bson.M{"$set": update})
 	return err
 }
 
-func GetDockerHostInformation() (DockerHosts, error) {
-	//
-	// gets all dockerhost information from the mongo DB..
-	//
-	dockerhosts := DockerHosts{}
-	host := []Host{}
-	// mongo db host, set in config.go
-	session, err := mgo.Dial(MongoDBAddress)
-	session.SetMode(mgo.Monotonic, true)
-	if err != nil {
-		return dockerhosts, err
-	}
-	defer session.Close()
-	collection := session.DB(MongoDBName).C(MongoDockerHostCollection)
-	err = collection.Find(nil).All(&host)
-	if err != nil {
-		return dockerhosts, err
-	}
-	dockerhosts.Host = host
-	return dockerhosts, nil
-}
-
 //
-// mysql schema - this is running on the LB so we won't be 
+// mysql schema - this is running on the LB so we won't be
 // creating it here (it's created with the python script if it doesn't exist)
 //
-//"CREATE TABLE `configs` 
-// (`id` INT(11) NOT NULL AUTO_INCREMENT, 
-// `name` VARCHAR(255) NOT NULL DEFAULT '0', 
-// `content` TEXT NOT NULL, `write` INT(11) NULL DEFAULT '0', 
-// `hash` VARCHAR(255) NOT NULL DEFAULT '0', 
+//"CREATE TABLE `configs`
+// (`id` INT(11) NOT NULL AUTO_INCREMENT,
+// `name` VARCHAR(255) NOT NULL DEFAULT '0',
+// `content` TEXT NOT NULL, `write` INT(11) NULL DEFAULT '0',
+// `hash` VARCHAR(255) NOT NULL DEFAULT '0',
 // PRIMARY KEY (`id`), UNIQUE INDEX `hash` (`hash`)) ENGINE=InnoDB;")
 
 // not yet implemented
@@ -100,8 +78,10 @@ func WriteNginxConfig(n NginxConfig) error {
 	}
 	// err = CreateMysqlTableConfigs(db)
 	// if err != nil {
-		// return err
+	// return err
 	// }
+	// this just inserts. now, the hostname should be a unique field:
+	// we won't be able to deploy twice with the same hostname
 	stmt, err := db.Prepare("INSERT INTO `configs` (`name`, `content`, `write`, `hostname`, `hash`) VALUES (?, ?, ?, ?, ?)")
 	//  ON DUPLICATE KEY UPDATE name=?, content=?, write=?
 	if err != nil {
@@ -121,5 +101,5 @@ func WriteNginxConfig(n NginxConfig) error {
 }
 
 func SearchForNginxConfig(hostname string) {
-	
+
 }

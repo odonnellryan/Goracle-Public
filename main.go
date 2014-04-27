@@ -24,11 +24,11 @@ func ReturnDockerHost(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
-	// 
+	//
 	// post request:
 	// FormValue: memory, memory_swap, user, container_name, image,
 	// 				command, exposed_ports, ip
-	// 
+	//
 	host, err := SelectHost()
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
@@ -41,7 +41,7 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	memory_swap, err := strconv.ParseInt(r.FormValue("memory_swap"),
-	10, 64)
+		10, 64)
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
@@ -52,16 +52,17 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := Deployment{
+		DockerHost:    host.Hostname,
 		User:          r.FormValue("user"),
 		ContainerName: r.FormValue("container_name"),
 		Image:         r.FormValue("image"),
 		Memory:        memory,      // number in bytes
-		MemorySwap:    memory_swap, // number in bytes for memory 
-									// + swap, -1 for no swap
-		CPU:           cpu,
-		Command:       CommaStringToSlice(r.FormValue("command")),
-		IP:            r.FormValue("ip"),
-		ExposedPorts:  CommaStringToSlice(r.FormValue("exposed_ports")),
+		MemorySwap:    memory_swap, // number in bytes for memory
+		// + swap, -1 for no swap
+		CPU:          cpu,
+		Command:      CommaStringToSlice(r.FormValue("command")),
+		IP:           r.FormValue("ip"),
+		ExposedPorts: CommaStringToSlice(r.FormValue("exposed_ports")),
 	}
 	deployment, errMsg, err := DeployNewContainer(host, d)
 	if err != nil {
