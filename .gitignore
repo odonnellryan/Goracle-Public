@@ -4,6 +4,7 @@
 
 [config.go]
 
+coverage.out
 *.pydevproject
 .project
 .metadata
