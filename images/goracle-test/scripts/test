@@ -1,0 +1,4 @@
+#!/bin/bash
+cd /go/src/Goracle
+go test -coverprofile=coverage.out 
+go tool cover -func=coverage.out

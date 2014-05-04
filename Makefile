@@ -3,7 +3,10 @@ GORACLE_STANDALONE_IMAGE := goracle-standalone
 GORACLE_TEST_IMAGE := goracle-test
 GORACLE_TEST_ENV := goracle-test-env
 
-build:
+init:
+	
+
+build: init
 	docker build --rm -t $(GORACLE_IMAGE) . 
 	mkdir -p bin
 
@@ -16,8 +19,11 @@ images: binary
 	docker build --rm -t goracle images/goracle
 	docker build --rm -t $(GORACLE_STANDALONE_IMAGE) images/goracle-standalone
 	
-test: build
+test-full: build
 	docker build --rm -t $(GORACLE_TEST_IMAGE) images/goracle-test
+	docker run -privileged -t -i -dns 8.8.8.8 -v /root/workspace/Goracle:/go/src/Goracle $(GORACLE_TEST_IMAGE) /start.sh
+	
+test: init
 	docker run -privileged -t -i -dns 8.8.8.8 -v /root/workspace/Goracle:/go/src/Goracle $(GORACLE_TEST_IMAGE) /start.sh
 	
 web: build

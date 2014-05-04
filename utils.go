@@ -9,6 +9,16 @@ import (
 	"encoding/hex"
 )
 
+type KeyValuePair struct {
+	Key   string
+	Value string
+}
+
+type PortBinding struct {
+	HostIp   string
+	HostPort string
+}
+
 func CommaStringToSlice(s string) []string {
 	return strings.Split(s, ",")
 }

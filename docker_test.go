@@ -18,37 +18,29 @@ var testDeployment = Deployment{
 	User:          "testUser",
 	ContainerName: "containerName",
 	Image:         "docker-test-image",
-	Command:       []string{"sh"},
+	Command:       []string{"cat"},
 	IP:            "127.0.0.1",
 	ExposedPorts:  []string{"88/tcp", "22/tcp"},
 }
 
+
+// TODO: review...
 func TestBuildDeployment(t *testing.T) {
-
 	testBuild := BuildDeployment(testDeployment)
-
-	if testBuild.Config.Memory != testDeployment.Memory {
-		t.Errorf("expected %s, got %s", testDeployment.Memory,
-			testBuild.Config.Memory)
-	}
 	if testBuild.Config.MemorySwap != testDeployment.MemorySwap {
-		t.Errorf("expected %s, got %s", testDeployment.MemorySwap,
+		t.Errorf("MemorySwap expected %s, got %s", testDeployment.MemorySwap,
 			testBuild.Config.MemorySwap)
 	}
 	if testBuild.Config.CpuShares != testDeployment.CPU {
-		t.Errorf("expected %s, got %s", testDeployment.CPU,
+		t.Errorf("CpuShares expected %s, got %s", testDeployment.CPU,
 			testBuild.Config.CpuShares)
 	}
 	if testBuild.Config.Image != testDeployment.Image {
-		t.Errorf("expected %s, got %s", testDeployment.Image,
+		t.Errorf("Image expected %s, got %s", testDeployment.Image,
 			testBuild.Config.Image)
 	}
 	if testBuild.Config.Memory != testDeployment.Memory {
-		t.Errorf("expected %s, got %s", testDeployment.Memory,
-			testBuild.Config.Memory)
-	}
-	if testBuild.Config.Memory != testDeployment.Memory {
-		t.Errorf("expected %s, got %s", testDeployment.Memory,
+		t.Errorf("Memory expected %s, got %s", testDeployment.Memory,
 			testBuild.Config.Memory)
 	}
 	for index := range testDeployment.ExposedPorts {
@@ -100,12 +92,9 @@ func TestDockerPull(t *testing.T) {
 }
 
 func TestListContainers(t *testing.T) {
-	cont, err := ListAllContainers(testHost)
+	_, err := ListAllContainers(testHost)
 	if err != nil {
 		t.Errorf("Error: %s", err)
-	}
-	if len(cont) != 0 {
-		t.Errorf("Length: %i, Containers are: %s", len(cont), cont)
 	}
 }
 
@@ -145,17 +134,110 @@ func TestInspectContainer(t *testing.T) {
 	if len(containerInfo.Warnings) != 0 {
 		t.Errorf("TestInspectContainer warning thrown: %+v \n", containerInfo.Warnings)
 	}
-	image, err := InspectContainer(testHost, containerInfo.Id)
+	info, err := InspectContainer(testHost, containerInfo.Id)
 	if err != nil {
 		t.Errorf("TestInspectContainer error: %s \n", err)
 	}
-	if container.Image == "" {
-		t.Errorf("TestInspectContainer create response: %+v inspect response %+v \n", containerInfo, container)
+	if !info.Exists {
+		t.Errorf("TestInspectContainer doesn't exist: %+v inspect response %+v \n", containerInfo, info)
+	}
+	// test with known bad ID
+    info, err = InspectContainer(testHost, (containerInfo.Id + "badid"))
+    if err != nil {
+		t.Errorf("TestInspectContainer bad id error: %s \n", err)
+	}
+    if info.Exists {
+        t.Errorf("TestInspectContainer bad id exists is true: %+v \n", info)
+    }
+	// test with no id
+	info, err = InspectContainer(testHost, "")
+	if err != nil {
+		t.Errorf("TestInspectContainer no id error: %s \n", err)
+	}
+    if info.Exists {
+        t.Errorf("TestInspectContainer no id exists is true: %+v \n", info)
+    }
+	//t.Errorf("TestInspectContainer warning thrown: %+v \n", info)
+}
+
+// 
+// need to implement
+// 
+func TestStartStopContainer(t *testing.T) {
+	containerInfo, errFrom, err := DeployNewContainer(testHost, testDeployment)
+	if err != nil {
+		t.Errorf("TestStartStopContainer error: %s thrown by: \n", err, errFrom)
+
+	}
+	if len(containerInfo.Warnings) != 0 {
+		t.Errorf("TestStartStopContainer warning thrown: %+v \n", containerInfo.Warnings)
+	}
+	resp, err := StartContainer(testHost, containerInfo.Id)
+	if err != nil {
+		t.Errorf("TestStartStopContainer error: %s \n", err)
+	}
+	if resp.StatusCode != 204 {
+	    msg, _ := ioutil.ReadAll(resp.Body)
+		t.Errorf("TestStartStopContainer Unexpected Status Code: %+v, %+v, %+v \n", resp.StatusCode, msg, containerInfo.Id)
+	}
+	info, err := InspectContainer(testHost, containerInfo.Id)
+	if err != nil {
+		t.Errorf("TestStartStopContainer error: %s \n", err)
+	}
+	if !info.State.Running {
+	    t.Errorf("TestStartStopContainer expected container to be running: %+v \n", info.State)
+	}
+	resp, err = StopContainer(testHost, containerInfo.Id)
+	if err != nil {
+		t.Errorf("TestStartStopContainer error: %s \n", err)
+	}
+	if resp.StatusCode != 204 {
+	    msg, _ := ioutil.ReadAll(resp.Body)
+		t.Errorf("Unexpected Status Code: %+v, %+v, %+v \n", resp.StatusCode, msg, containerInfo.Id)
+	}
+	info, err = InspectContainer(testHost, containerInfo.Id)
+	if err != nil {
+		t.Errorf("TestStartStopContainer error: %s \n", err)
+	}
+	if info.State.Running {
+	    t.Errorf("TestStartStopContainer expected container to be running: %+v \n", info.State)
 	}
 }
 
+// 
+// need to implement
+// 
+func TestDeleteContainer(t *testing.T) {
+	containerInfo, errFrom, err := DeployNewContainer(testHost, testDeployment)
+	if err != nil {
+		t.Errorf("TestDeleteContainer error: %s thrown by: \n", err, errFrom)
+
+	}
+	if len(containerInfo.Warnings) != 0 {
+		t.Errorf("TestDeleteContainer warning thrown: %+v \n", containerInfo.Warnings)
+	}
+	resp, err := DeleteContainer(testHost, containerInfo.Id)
+	if err != nil {
+		t.Errorf("TestDeleteContainer error: %s \n", err)
+	}
+	if resp.StatusCode != 204 {
+	    msg, _ := ioutil.ReadAll(resp.Body)
+		t.Errorf("TestDeleteContainer Unexpected Status Code: %+v, %+v, %+v \n", resp.StatusCode, msg, containerInfo.Id)
+	}
+	info, err := InspectContainer(testHost, containerInfo.Id)
+	if err != nil {
+		t.Errorf("TestDeleteContainer error: %s \n", err)
+	}
+	if info.Exists {
+	    t.Errorf("TestDeleteContainer container exists?: %+v \n", info)
+	}
+}
+
+//
 // disabled for now, takes a long time and we probably
 // don't really need it really (just searches the docker repo)
+// until we get our own private repo (if that's what we want?)
+//
 //func TestSearchForImage(t *testing.T) {
 //resp, err := SearchForImage(testHost, testDeployment)
 //if err != nil {

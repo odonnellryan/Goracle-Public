@@ -76,12 +76,9 @@ func TestMongoUpsert(t *testing.T) {
 }
 
 func TestGetDockerHostInformation(t *testing.T) {
-	dockerHosts, err := GetDockerHostInformation()
+	_, err := GetDockerHostInformation()
 	if err != nil {
 		t.Errorf("TestGetDockerHostInformation error: %s", err)
-	}
-	if len(dockerHosts.Host) != 0 {
-		t.Errorf("TestGetDockerHostInformation returned hosts?: %s", dockerHosts)
 	}
 }
 

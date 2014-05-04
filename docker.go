@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	//"log"
+	"time"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -29,11 +30,11 @@ type Deployment struct {
 	Command       []string
 	IP            string
 	ExposedPorts  []string
-	Config        CreateContainer
+	Config        Config
 	DeployedInfo  DeployedContainerInfo
 }
 
-type CreateContainer struct {
+type Config struct {
 	Hostname        string
 	Domainname      string
 	User            string
@@ -61,20 +62,49 @@ type CreateContainer struct {
 	OnBuild         []string
 }
 
+type State struct {
+	Running    bool
+	Pid        int
+	ExitCode   int
+	StartedAt  time.Time
+    Ghost      bool
+}
+
+type HostConfig struct {
+	Binds           []string
+	ContainerIDFile string
+	LxcConf         []KeyValuePair
+	Privileged      bool
+	PortBindings    map[string][]PortBinding
+	Links           []string
+	PublishAllPorts bool
+	Dns             []string
+	DnsSearch       []string
+	VolumesFrom     []string
+}
+
+type InspectContainerInfo struct {
+    Config      Config
+    State       State
+    Image       string
+    Id          string
+    Created     time.Time
+    Warnings    []string
+    HostConfig  HostConfig
+    Exists      bool
+}
+
 type DeployedContainerInfo struct {
 	Id       string
 	Warnings []string
 }
 
-type ContainerInfo struct {
+type ListContainerInfo struct {
 	Id         string
 	Image      string
-	Command    []string
-	Created    string
+	Command    string
+	Created    int
 	Status     string
-	Ports      map[string]string
-	SizeRw     int
-	SizeRootFs int
 }
 
 type SearchResponse struct {
@@ -92,7 +122,7 @@ type SearchResponse struct {
 // nginx deployment will be its own thing
 
 func BuildDeployment(d Deployment) Deployment {
-	d.Config = CreateContainer{
+	d.Config = Config {
 		Memory:       d.Memory,     // Memory limit (in bytes)
 		MemorySwap:   d.MemorySwap, // mem + swap, -1 to disable swap.
 		AttachStdin:  false,
@@ -111,7 +141,7 @@ func BuildDeployment(d Deployment) Deployment {
 }
 
 type ListContainers struct {
-	ContainerInfoList []ContainerInfo
+	ContainerInfoList []ListContainerInfo
 }
 
 // HTTP client, http basic auth stuff
@@ -130,7 +160,17 @@ func SendDockerCommand(host Host, command string, method string, body io.Reader)
 	if err != nil {
 		return nulResp, err
 	}
-	request.Header.Set("Content-Type", "application/json")
+	// this is to fix some odd docker bugs.
+	// we should probably fix this within docker, but...
+	// really lazy. if you care, it's somewhere line 658 in api.go
+	// function postContainersStart
+	// there's a problem with it not realizing a nil body (who knows)
+	// then it tries to json deserialize something odd
+	// and it comes back broke, throws EOF, then you get an internal server error
+	// so you can't start containers. 
+	if body != nil {
+	    request.Header.Set("Content-Type", "application/json")
+	}
 	request.SetBasicAuth(host.User, host.Password)
 	response, err = client.Do(request)
 	if err != nil {
@@ -161,7 +201,7 @@ func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string,
 	resp, err := SendDockerCommand(host, "containers/create", "POST",
 		bytes.NewReader(body))
 	if resp.StatusCode != 201 {
-		fmt.Printf("response status code: %s \n", resp.StatusCode)
+		//fmt.Printf("response status code: %s \n", resp.StatusCode)
 		msg, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return deployedInfo, "", err
@@ -190,28 +230,12 @@ func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string,
 	return deployedInfo, "", nil
 }
 
-// we don't need this right now. searches the repo for an image.
-//func SearchForImage(h Host, d Deployment) ([]SearchResponse, error) {
-//searchResp := []SearchResponse{}
-//command := "images/search?term=" + d.Image
-//resp, err := SendDockerCommand(h, command, "GET", nil)
-//if err != nil {
-//	return nil, err
-//}
-//decode := json.NewDecoder(resp.Body)
-//err = decode.Decode(&searchResp)
-//if err != nil {
-//	return searchResp, err
-//}
-//return searchResp, nil
-//}
-
-func ListAllContainers(h Host) ([]ContainerInfo, error) {
-	containers := []ContainerInfo{}
+func ListAllContainers(h Host) ([]ListContainerInfo, error) {
+	containers := []ListContainerInfo{}
 	command := "containers/json?all=1"
 	resp, err := SendDockerCommand(h, command, "GET", nil)
 	if err != nil {
-		return nil, err
+		return containers, err
 	}
 	decode := json.NewDecoder(resp.Body)
 	err = decode.Decode(&containers)
@@ -221,29 +245,42 @@ func ListAllContainers(h Host) ([]ContainerInfo, error) {
 	return containers, nil
 }
 
-func InspectContainer(h Host, containerID string) (CreateContainer, error) {
-	containerInfo := CreateContainer{}
+func InspectContainer(h Host, containerID string) (InspectContainerInfo, error) {
+	containerInfo := InspectContainerInfo{}
 	command := "containers/" + containerID + "/json"
 	resp, err := SendDockerCommand(h, command, "GET", nil)
 	if err != nil {
 		return containerInfo, err
 	}
+	if containerID == "" || (len(containerID) < 12) {
+	    resp.StatusCode = 404
+	}
+	if resp.StatusCode == 404 {
+	    containerInfo.Exists = false
+	    return containerInfo, err
+	}
+	if resp.StatusCode == 500 {
+	    msg, err := ioutil.ReadAll(resp.Body)
+	    if err != nil {
+		    return containerInfo, err
+	    }
+	    containerInfo.Exists = false
+	    return containerInfo, errors.New("Server error when inspecting image: " + string(msg))
+	}
 	decode := json.NewDecoder(resp.Body)
 	err = decode.Decode(&containerInfo)
 	if err != nil {
-		return containerInfo, err
+		containerInfo.Exists = false
+		jsonErr := err
+		msg, err := ioutil.ReadAll(resp.Body)
+	    if err != nil {
+		    return containerInfo, err
+	    }
+	    fmt.Printf("returned from server: %+v", msg)
+	    return containerInfo, errors.New("json error: " + jsonErr.Error() + string(msg))
 	}
+	containerInfo.Exists = true
 	return containerInfo, nil
-}
-
-func DeleteImage(h Host, c ContainerInfo) (http.Response, error) {
-	nulResp := http.Response{}
-	command := "images/" + c.Image
-	resp, err := SendDockerCommand(h, command, "GET", nil)
-	if err != nil {
-		return nulResp, err
-	}
-	return resp, nil
 }
 
 func DeleteContainer(h Host, id string) (http.Response, error) {
@@ -256,14 +293,55 @@ func DeleteContainer(h Host, id string) (http.Response, error) {
 	return resp, nil
 }
 
-func StopContainer(h Host, id string) (http.Response, error) {
+func StartContainer(h Host, id string) (http.Response, error) {
 	nulResp := http.Response{}
-	command := "containers/" + id + "/stop?t=5"
+	command := "v1.7/containers/" + id + "/start"
 	resp, err := SendDockerCommand(h, command, "POST", nil)
 	if err != nil {
 		return nulResp, err
 	}
 	return resp, nil
 }
+
+func StopContainer(h Host, id string) (http.Response, error) {
+	nulResp := http.Response{}
+	command := "v1.7/containers/" + id + "/stop?t=5"
+	resp, err := SendDockerCommand(h, command, "POST", nil)
+	if err != nil {
+		return nulResp, err
+	}
+	return resp, nil
+}
+
+// ### begin function graveyard ###
+//
+// not sure if we'd even want to delete images? probably just containers.
+//
+//func DeleteImage(h Host, id string) (http.Response, error) {
+//	nulResp := http.Response{}
+//	command := "containers/" + id + "/start"
+//	resp, err := SendDockerCommand(h, command, "DELETE", nil)
+//	if err != nil {
+//		return nulResp, err
+//	}
+//	return resp, nil
+//}
+//
+//  we don't need this right now. searches the repo for an image.
+// 
+//func SearchForImage(h Host, d Deployment) ([]SearchResponse, error) {
+//  searchResp := []SearchResponse{}
+//  command := "images/search?term=" + d.Image
+//  resp, err := SendDockerCommand(h, command, "GET", nil)
+//  if err != nil {
+//	    return nil, err
+//  }
+//  decode := json.NewDecoder(resp.Body)
+//  err = decode.Decode(&searchResp)
+//  if err != nil {
+//	    return searchResp, err
+//  }
+//  return searchResp, nil
+//}
 
 //func StopContainerRequest() { }

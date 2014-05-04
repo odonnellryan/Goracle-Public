@@ -58,6 +58,7 @@ func TestUpdateAllDockerHostsInMongo(t *testing.T) {
 }
 
 func TestIncrementContainerCount(t *testing.T) {
+    var firstResult []Host
 	var result []Host
 	session, err := mgo.Dial(MongoDBAddress)
 	defer session.Close()
@@ -66,6 +67,10 @@ func TestIncrementContainerCount(t *testing.T) {
 		t.Errorf("test IncrementContainerCount dial error: %s", err)
 	}
 	c := session.DB(MongoDBName).C(MongoDockerHostCollection)
+	err = c.Find(bson.M{"hostname": testHostFile.Host[0].Hostname}).All(&firstResult)
+	if err != nil {
+		t.Errorf("IncrementContainerCount mongo find error: %s", err)
+	}
 	err = IncrementContainerCount(testHostFile.Host[0])
 	if err != nil {
 		t.Errorf("IncrementContainerCount error: %s", err)
@@ -74,9 +79,9 @@ func TestIncrementContainerCount(t *testing.T) {
 	if err != nil {
 		t.Errorf("IncrementContainerCount mongo find error: %s", err)
 	}
-	newContainerCount := testHostFile.Host[0].Containers + 1
+	newContainerCount := firstResult[0].Containers + 1
 	if result[0].Containers != newContainerCount {
-		t.Errorf("IncrementContainerCount error. Expecting: %s, found: %s", newContainerCount, result[0].Containers)
+		t.Errorf("IncrementContainerCount error. Expecting: %+v, found: %s", firstResult, result[0].Containers)
 	}
 }
 
@@ -126,9 +131,8 @@ func TestUpdateContainerNumberInHost(t *testing.T) {
 		t.Errorf("TestUpdateContainerNumberInHost mongo find error: %s", err)
 	}
 	//fmt.Printf("result: %+v", result)
-	newContainerCount := 0
-	if result[0].Containers != newContainerCount {
-		t.Errorf("IncrementContainerCount error. Expecting: %s, found: %s", newContainerCount, result[0].Containers)
+	if result[0].Containers < 0 {
+		t.Errorf("TestUpdateContainerNumberInHost error. found: %s", result[0].Containers)
 	}
 }
 

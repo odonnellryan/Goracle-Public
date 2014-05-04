@@ -16,6 +16,7 @@ type DockerDatabaseWrite struct {
 	// future
 	// RO: no idea what this is for, if you remember comment.
 	// RO: 04/19/2014: still not sure.
+	// RO: 05/03/2014: nope
 	//
 	Username string
 	UserId   string
@@ -101,6 +102,6 @@ func WriteNginxConfig(n NginxConfig) error {
 	return nil
 }
 
-func GetNginxConfig(hostname string) {
-
-}
+//func GetNginxConfig(hostname string) {
+//
+//}

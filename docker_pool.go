@@ -50,6 +50,7 @@ func UpdateAllDockerHostsInMongo() error {
 func UpdateTotalContainerNumber(d DockerHosts) error {
 	for index := range d.Host {
 		containers, err := ListAllContainers(d.Host[index])
+		//fmt.Printf("containers: %+v", containers)
 		if err != nil {
 			return err
 		}

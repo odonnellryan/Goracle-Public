@@ -12,11 +12,13 @@ wrapdocker > /var/log/docker.log 2>&1 &
 # nginx needs to own the socket for docker so we con
 # wrap it in http basic
 # give docker a bit to initialize...
-sleep 5
+sleep 1
 chown www-data /var/run/docker.sock
 # go coverage/test tools
+cp /test /usr/bin/gtest
+chmod +x /usr/bin/gtest
 go test -coverprofile=coverage.out 
 go tool cover -func=coverage.out
 # uncomment the below if you wish to enter the console 
 # for the test container at the end of testing
-#/bin/bash
+/bin/bash
