@@ -21,7 +21,7 @@ func TestHandlers(t *testing.T) {
 	// redirect logging to a buffer for testing
 	var logBuffer bytes.Buffer
 	log.SetOutput(&logBuffer)
-	// set up the dispatcher testing
+	// set up the dispatcher for testing
 	testDispatcher := &RequestDispatcher{make(map[string]*http.ServeMux)}
 	testDispatcher.AddHandler("POST", "/test/", testRoute)
 	// test the logging

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -111,7 +111,7 @@ func TestSendDockerCommand(t *testing.T) {
 		t.Errorf("Unexpected Status Code: %s \n", resp.StatusCode)
 		t.Errorf("Reason: %s \n", msg)
 	}
-	fmt.Printf("Images: %s \n", msg)
+	//fmt.Printf("Images: %s \n", msg)
 }
 
 func TestDeployNewContainer(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
+	//"fmt"
 	"net/http"
 	//"net/url"
 )
@@ -200,6 +200,9 @@ func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string,
 	// send the create command
 	resp, err := SendDockerCommand(host, "containers/create", "POST",
 		bytes.NewReader(body))
+	if err != nil {
+		return deployedInfo, "Error with send Docker command.", err
+	}
 	if resp.StatusCode != 201 {
 		//fmt.Printf("response status code: %s \n", resp.StatusCode)
 		msg, err := ioutil.ReadAll(resp.Body)
@@ -207,9 +210,6 @@ func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string,
 			return deployedInfo, "", err
 		}
 		return deployedInfo, "Error with send Docker command response.", errors.New(string(msg))
-	}
-	if err != nil {
-		return deployedInfo, "Error with send Docker command.", err
 	}
 	decode := json.NewDecoder(resp.Body)
 	err = decode.Decode(&deployedInfo)
@@ -276,7 +276,6 @@ func InspectContainer(h Host, containerID string) (InspectContainerInfo, error) 
 	    if err != nil {
 		    return containerInfo, err
 	    }
-	    fmt.Printf("returned from server: %+v", msg)
 	    return containerInfo, errors.New("json error: " + jsonErr.Error() + string(msg))
 	}
 	containerInfo.Exists = true
