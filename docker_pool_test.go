@@ -58,7 +58,7 @@ func TestUpdateAllDockerHostsInMongo(t *testing.T) {
 }
 
 func TestIncrementContainerCount(t *testing.T) {
-    var firstResult []Host
+	var firstResult []Host
 	var result []Host
 	session, err := mgo.Dial(MongoDBAddress)
 	defer session.Close()

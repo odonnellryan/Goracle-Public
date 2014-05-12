@@ -33,4 +33,6 @@ RUN         DEBIAN_FRONTEND=noninteractive apt-get install -yq \
 ADD	        .	/go/src/Goracle
 ADD         scripts /
 ADD         nginx /etc/nginx/
+RUN cp /pipework /usr/bin/pipework
+RUN chmod +x /usr/bin/pipework
 RUN         chmod +x /start.sh

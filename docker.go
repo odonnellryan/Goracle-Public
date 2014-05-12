@@ -6,10 +6,10 @@ import (
 	"io"
 	"io/ioutil"
 	//"log"
-	"time"
 	"bytes"
 	"encoding/json"
 	"errors"
+	"time"
 	//"fmt"
 	"net/http"
 	//"net/url"
@@ -19,8 +19,9 @@ import (
 // For all actions taken on containers through the Luma portal.
 //
 
-type Deployment struct {
-	DockerHost    string
+type DockerServer struct {
+	Hostname      string
+	Host          Host
 	User          string
 	ContainerName string
 	Image         string
@@ -32,6 +33,7 @@ type Deployment struct {
 	ExposedPorts  []string
 	Config        Config
 	DeployedInfo  DeployedContainerInfo
+	ContainerInfo InspectContainerInfo
 }
 
 type Config struct {
@@ -63,11 +65,11 @@ type Config struct {
 }
 
 type State struct {
-	Running    bool
-	Pid        int
-	ExitCode   int
-	StartedAt  time.Time
-    Ghost      bool
+	Running   bool
+	Pid       int
+	ExitCode  int
+	StartedAt time.Time
+	Ghost     bool
 }
 
 type HostConfig struct {
@@ -84,14 +86,14 @@ type HostConfig struct {
 }
 
 type InspectContainerInfo struct {
-    Config      Config
-    State       State
-    Image       string
-    Id          string
-    Created     time.Time
-    Warnings    []string
-    HostConfig  HostConfig
-    Exists      bool
+	Config     Config
+	State      State
+	Image      string
+	Id         string
+	Created    time.Time
+	Warnings   []string
+	HostConfig HostConfig
+	Exists     bool
 }
 
 type DeployedContainerInfo struct {
@@ -100,11 +102,15 @@ type DeployedContainerInfo struct {
 }
 
 type ListContainerInfo struct {
-	Id         string
-	Image      string
-	Command    string
-	Created    int
-	Status     string
+	Id      string
+	Image   string
+	Command string
+	Created int
+	Status  string
+}
+
+type ListContainers struct {
+	ContainerInfoList []ListContainerInfo
 }
 
 type SearchResponse struct {
@@ -121,8 +127,8 @@ type SearchResponse struct {
 // deploying the container deploys it using docker's default hostname.
 // nginx deployment will be its own thing
 
-func BuildDeployment(d Deployment) Deployment {
-	d.Config = Config {
+func (d *DockerServer) BuildDeployment() {
+	d.Config = Config{
 		Memory:       d.Memory,     // Memory limit (in bytes)
 		MemorySwap:   d.MemorySwap, // mem + swap, -1 to disable swap.
 		AttachStdin:  false,
@@ -137,11 +143,35 @@ func BuildDeployment(d Deployment) Deployment {
 	for index := range d.ExposedPorts {
 		d.Config.ExposedPorts[d.ExposedPorts[index]] = struct{}{}
 	}
-	return d
 }
 
-type ListContainers struct {
-	ContainerInfoList []ListContainerInfo
+func NewDockerServer(d DockerServer) (DockerServer, error) {
+	//
+	// created a new docker server connection.
+	// basically just finds the host details.
+	//
+	if d.Hostname != "" {
+		host, err := GetDockerHostByHostname(d.Hostname)
+		if err != nil {
+			host, err := SelectHost()
+			if err != nil {
+				return d, err
+			}
+			d.Host = host
+			d.Hostname = host.Hostname
+			return d, nil
+		}
+		d.Host = host
+		d.Hostname = host.Hostname
+	} else {
+		host, err := SelectHost()
+		if err != nil {
+			return d, err
+		}
+		d.Host = host
+		d.Hostname = host.Hostname
+	}
+	return d, nil
 }
 
 // HTTP client, http basic auth stuff
@@ -165,11 +195,13 @@ func SendDockerCommand(host Host, command string, method string, body io.Reader)
 	// really lazy. if you care, it's somewhere line 658 in api.go
 	// function postContainersStart
 	// there's a problem with it not realizing a nil body (who knows)
-	// then it tries to json deserialize something odd
-	// and it comes back broke, throws EOF, then you get an internal server error
-	// so you can't start containers. 
+	// then it tries to take a json action on something odd
+	// and it comes back broke (it's not json), throws EOF,
+	// then you get an internal server error so you can't start the container.
+	// basically, if the body is nil it doesn't matter what
+	// the content is, right? so who cares.
 	if body != nil {
-	    request.Header.Set("Content-Type", "application/json")
+		request.Header.Set("Content-Type", "application/json")
 	}
 	request.SetBasicAuth(host.User, host.Password)
 	response, err = client.Do(request)
@@ -179,7 +211,41 @@ func SendDockerCommand(host Host, command string, method string, body io.Reader)
 	return *response, nil
 }
 
-func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string, error) {
+func (d *DockerServer) DeleteContainer() (http.Response, error) {
+	nulResp := http.Response{}
+	command := "containers/" + d.DeployedInfo.Id
+	resp, err := SendDockerCommand(d.Host, command, "DELETE", nil)
+	if err != nil {
+		return nulResp, err
+	}
+	return resp, nil
+}
+
+func (d *DockerServer) StartContainer() (http.Response, error) {
+	nulResp := http.Response{}
+	command := "v1.7/containers/" + d.DeployedInfo.Id + "/start"
+	resp, err := SendDockerCommand(d.Host, command, "POST", nil)
+	if err != nil {
+		return nulResp, err
+	}
+	return resp, nil
+}
+
+func (d *DockerServer) StopContainer() (http.Response, error) {
+	nulResp := http.Response{}
+	command := "v1.7/containers/" + d.DeployedInfo.Id + "/stop?t=5"
+	resp, err := SendDockerCommand(d.Host, command, "POST", nil)
+	if err != nil {
+		return nulResp, err
+	}
+	return resp, nil
+}
+
+// these functions will probably be refactored and
+// thrown into a "docker_actions" file, or something
+// basically, these are actions/processes/logic, the above are commands
+
+func (d *DockerServer) DeployNewContainer() (string, error) {
 
 	//
 	// order of operations:
@@ -191,49 +257,51 @@ func DeployNewContainer(host Host, d Deployment) (DeployedContainerInfo, string,
 	//
 
 	// build the deployment struct
-	deployment := BuildDeployment(d)
+	d.BuildDeployment()
 	deployedInfo := DeployedContainerInfo{}
-	body, err := json.Marshal(deployment.Config)
+	body, err := json.Marshal(d.Config)
 	if err != nil {
-		return deployedInfo, "", err
+		return "", err
 	}
 	// send the create command
-	resp, err := SendDockerCommand(host, "containers/create", "POST",
+	resp, err := SendDockerCommand(d.Host, "containers/create", "POST",
 		bytes.NewReader(body))
 	if err != nil {
-		return deployedInfo, "Error with send Docker command.", err
+		return "Error with send Docker command.", err
 	}
 	if resp.StatusCode != 201 {
 		//fmt.Printf("response status code: %s \n", resp.StatusCode)
 		msg, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return deployedInfo, "", err
+			return "", err
 		}
-		return deployedInfo, "Error with send Docker command response.", errors.New(string(msg))
+		return "Error with send Docker command response.", errors.New(string(msg))
 	}
 	decode := json.NewDecoder(resp.Body)
 	err = decode.Decode(&deployedInfo)
 	if err != nil {
-		return deployedInfo, "json decode", err
+		return "json decode", err
 	}
-	deployment.DeployedInfo = deployedInfo
+	d.DeployedInfo = deployedInfo
+	d.ContainerName = deployedInfo.Id
 	// log it/enter to mongo
-	err = MongoInsert(MongoDeployCollection, deployment)
+	err = MongoInsert(MongoDeployCollection, d)
 	if err != nil {
-		return deployedInfo, "mongo error", err
+		return "mongo error", err
 	}
 	// update container count
-	err = IncrementContainerCount(host)
+	err = IncrementContainerCount(d.Host)
 	if err != nil {
-		return deployedInfo, "increment error", err
+		return "increment error", err
 	}
-	return deployedInfo, "", nil
+	return "", nil
 }
 
-func ListAllContainers(h Host) ([]ListContainerInfo, error) {
+// for host, not docker really..
+func ListAllContainers(host Host) ([]ListContainerInfo, error) {
 	containers := []ListContainerInfo{}
 	command := "containers/json?all=1"
-	resp, err := SendDockerCommand(h, command, "GET", nil)
+	resp, err := SendDockerCommand(host, command, "GET", nil)
 	if err != nil {
 		return containers, err
 	}
@@ -245,71 +313,51 @@ func ListAllContainers(h Host) ([]ListContainerInfo, error) {
 	return containers, nil
 }
 
-func InspectContainer(h Host, containerID string) (InspectContainerInfo, error) {
+// refactor this. should return an http response
+// then there should be the "docker processor" that
+// will find the host by the Deployment struct
+// and do the processing (find the host once)
+// otherwise, we'd have to find it before somewhere
+// it'd be nice to do:
+// dockerServer := DockerServer(&Deployment)
+// containerInfo := dockerAction.inspect()
+func (d *DockerServer) InspectContainer() error {
 	containerInfo := InspectContainerInfo{}
-	command := "containers/" + containerID + "/json"
-	resp, err := SendDockerCommand(h, command, "GET", nil)
+	command := "containers/" + d.DeployedInfo.Id + "/json"
+	resp, err := SendDockerCommand(d.Host, command, "GET", nil)
 	if err != nil {
-		return containerInfo, err
+		return err
 	}
-	if containerID == "" || (len(containerID) < 12) {
-	    resp.StatusCode = 404
+	if d.DeployedInfo.Id == "" {
+		err = errors.New("Containername error: container name does not exist")
+		resp.StatusCode = 404
 	}
 	if resp.StatusCode == 404 {
-	    containerInfo.Exists = false
-	    return containerInfo, err
+		d.ContainerInfo.Exists = false
+		return err
 	}
 	if resp.StatusCode == 500 {
-	    msg, err := ioutil.ReadAll(resp.Body)
-	    if err != nil {
-		    return containerInfo, err
-	    }
-	    containerInfo.Exists = false
-	    return containerInfo, errors.New("Server error when inspecting image: " + string(msg))
+		msg, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		d.ContainerInfo.Exists = false
+		return errors.New("Server error when inspecting image: " + string(msg))
 	}
 	decode := json.NewDecoder(resp.Body)
 	err = decode.Decode(&containerInfo)
 	if err != nil {
-		containerInfo.Exists = false
+		d.ContainerInfo.Exists = false
 		jsonErr := err
 		msg, err := ioutil.ReadAll(resp.Body)
-	    if err != nil {
-		    return containerInfo, err
-	    }
-	    return containerInfo, errors.New("json error: " + jsonErr.Error() + string(msg))
+		if err != nil {
+			return err
+		}
+		return errors.New("json error: " + jsonErr.Error() + string(msg))
 	}
-	containerInfo.Exists = true
-	return containerInfo, nil
-}
-
-func DeleteContainer(h Host, id string) (http.Response, error) {
-	nulResp := http.Response{}
-	command := "containers/" + id
-	resp, err := SendDockerCommand(h, command, "DELETE", nil)
-	if err != nil {
-		return nulResp, err
-	}
-	return resp, nil
-}
-
-func StartContainer(h Host, id string) (http.Response, error) {
-	nulResp := http.Response{}
-	command := "v1.7/containers/" + id + "/start"
-	resp, err := SendDockerCommand(h, command, "POST", nil)
-	if err != nil {
-		return nulResp, err
-	}
-	return resp, nil
-}
-
-func StopContainer(h Host, id string) (http.Response, error) {
-	nulResp := http.Response{}
-	command := "v1.7/containers/" + id + "/stop?t=5"
-	resp, err := SendDockerCommand(h, command, "POST", nil)
-	if err != nil {
-		return nulResp, err
-	}
-	return resp, nil
+	d.ContainerInfo = containerInfo
+	d.ContainerInfo.Exists = true
+	return nil
 }
 
 // ### begin function graveyard ###
@@ -327,7 +375,7 @@ func StopContainer(h Host, id string) (http.Response, error) {
 //}
 //
 //  we don't need this right now. searches the repo for an image.
-// 
+//
 //func SearchForImage(h Host, d Deployment) ([]SearchResponse, error) {
 //  searchResp := []SearchResponse{}
 //  command := "images/search?term=" + d.Image

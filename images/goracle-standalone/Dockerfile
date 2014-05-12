@@ -22,6 +22,8 @@ RUN apt-get install	-yq nano
 RUN apt-get install	-yq wget
 RUN apt-get install	-yq git
 RUN apt-get install	-yq net-tools
+RUN apt-get install	-yq iputils-ping
+RUN apt-get install	-yq arping
 
 RUN pip install mysql-python
 
@@ -38,9 +40,10 @@ RUN mkdir -p /data/db
 RUN /usr/sbin/mysqld & \
     sleep 4s &&\
     echo "CREATE DATABASE nginx; GRANT ALL ON *.* TO 'ryan'@'localhost' IDENTIFIED BY 'test' WITH GRANT OPTION; FLUSH PRIVILEGES;" | mysql
-
-EXPOSE 6000
-ENTRYPOINT /start.sh
 ADD bin /usr/local/bin
 ADD scripts /
-ADD nginx/ /etc/
+RUN cp /pipework /usr/bin/pipework
+RUN chmod +x /usr/bin/pipework
+ADD nginx /etc/nginx/
+EXPOSE 6000
+ENTRYPOINT /start.sh

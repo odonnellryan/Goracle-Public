@@ -15,7 +15,7 @@ wrapdocker > /var/log/docker.log 2>&1 &
 sleep 1
 chown www-data /var/run/docker.sock
 # go coverage/test tools
-cp /test /usr/bin/gtest
+cp /gtest /usr/bin/gtest
 chmod +x /usr/bin/gtest
 go test -coverprofile=coverage.out 
 go tool cover -func=coverage.out
