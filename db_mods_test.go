@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/ziutek/mymysql/mysql"
 	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
+	//"labix.org/v2/mgo/bson"
 	"testing"
 	// "fmt"
 )
@@ -63,12 +63,12 @@ func TestMongoUpsert(t *testing.T) {
 	c := session.DB(MongoDBName).C(testCollection)
 	err = MongoUpsert(testCollection, testingQuery, updateQuery)
 	if err != nil {
-		t.Errorf("TestMongoUpsertError upsert: %s", err)
+		t.Errorf("TestMongoUpsert Error upsert: %s", err)
 	}
 	result := TestResult{}
-	err = c.Find(bson.M{"testtwo": "2"}).One(&result)
+	err = c.Find(updateQuery).One(&result)
 	if err != nil {
-		t.Errorf("TestMongoUpsert error: %s", err)
+		t.Errorf("Find: %s", err)
 	}
 	if result != updateQuery {
 		t.Errorf("TestMongoUpsert Expected: %s, found: %s", updateQuery, result)

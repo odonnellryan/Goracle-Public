@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"fmt"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -14,7 +14,7 @@ var testHost = Host{
 	Password: "test",
 }
 
-var testDeployment = DockerServer{
+var testDeployment = DockerServer {
 	User:         "testUser",
 	Hostname:     "local_testing",
 	Image:        "docker-test-image",
@@ -140,6 +140,11 @@ func TestDeployNewContainer(t *testing.T) {
 	if len(testDeploy.DeployedInfo.Warnings) != 0 {
 		t.Errorf("TestDeployNewContainer warning thrown: %+v \n", testDeploy.DeployedInfo.Warnings)
 	}
+	dockerContainers, err := testDeploy.GetAllUserContainers()
+	if len(testDeploy.DeployedInfo.Warnings) != 0 {
+		t.Errorf("TestDeployNewContainer find user container error thrown: %+v \n", testDeploy.DeployedInfo.Warnings)
+	}
+	fmt.Printf("%+v,\n", dockerContainers)
 }
 
 func TestInspectContainer(t *testing.T) {

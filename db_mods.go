@@ -47,10 +47,10 @@ func MongoUpsert(collectionName string, query interface{},
 	//
 	// mongo db host, set in config.go
 	session, err := mgo.Dial(MongoDBAddress)
-	session.SetMode(mgo.Monotonic, true)
 	if err != nil {
 		return err
 	}
+	session.SetMode(mgo.Monotonic, true)
 	defer session.Close()
 	collection := session.DB(MongoDBName).C(collectionName)
 	// that set thing is needed because Mongo.

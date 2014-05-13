@@ -60,7 +60,7 @@ func HandleDeploymentRequest(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	deploymentConfig := DockerServer {
+	deploymentConfig := DockerServer{
 		User:          r.FormValue("user"),
 		ContainerName: r.FormValue("container_name"),
 		Image:         r.FormValue("image"),
