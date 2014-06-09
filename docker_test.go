@@ -103,7 +103,7 @@ func TestDockerPull(t *testing.T) {
 }
 
 func TestListContainers(t *testing.T) {
-	_, err := ListAllContainers(testHost)
+	_, err := testHost.ListAllContainers()
 	if err != nil {
 		t.Errorf("TestListContainers Error: %s", err)
 	}
@@ -140,11 +140,16 @@ func TestDeployNewContainer(t *testing.T) {
 	if len(testDeploy.DeployedInfo.Warnings) != 0 {
 		t.Errorf("TestDeployNewContainer warning thrown: %+v \n", testDeploy.DeployedInfo.Warnings)
 	}
-	dockerContainers, err := testDeploy.GetAllUserContainers()
+	user := User{Username:testDeploy.User,}
+	err = user.GetAllUserContainers()
+	if err != nil {
+		t.Errorf("TestDeployNewContainer error: %s thrown by: \n", err, errFrom)
+
+	}
 	if len(testDeploy.DeployedInfo.Warnings) != 0 {
 		t.Errorf("TestDeployNewContainer find user container error thrown: %+v \n", testDeploy.DeployedInfo.Warnings)
 	}
-	fmt.Printf("%+v,\n", dockerContainers)
+	fmt.Printf("%+v,\n", user.Containers)
 }
 
 func TestInspectContainer(t *testing.T) {

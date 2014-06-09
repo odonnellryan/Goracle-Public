@@ -1,19 +1,24 @@
 package main
 
 import (
-	//"os/exec"
+	"fmt"
 )
 
 type Pipework struct {
-	err            error
-	container      string
-	host_interface string
-	address        string
-	subnet         string
-	gateway        string
-	finished       error
+	Err            error
+	Container      string
+	HostInterface  string
+	Address        string
+	Subnet         string
+	Gateway        string
+	Finished       error
 }
 
-func (p *Pipework) AddInterfaceToContainer() {
-	//exec.Command(
+func (p *Pipework) AddInterfaceToContainer(host Host) error {
+    err := host.SendSSHCommand("CMD")
+    if err != nil {
+		return err
+	}
+	fmt.Printf("testing needs implementation")
+	return nil
 }

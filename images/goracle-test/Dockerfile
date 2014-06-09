@@ -22,6 +22,7 @@ RUN         go get "code.google.com/p/go.tools/cmd/cover"
 RUN         go get "github.com/ziutek/mymysql/thrsafe"
 RUN         go get "github.com/ziutek/mymysql/autorc"
 RUN         go get "github.com/ziutek/mymysql/godrv"
+RUN         go get "code.google.com/p/go.crypto/ssh"
 
 WORKDIR		/go/src/Goracle
 

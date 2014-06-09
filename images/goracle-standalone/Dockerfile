@@ -36,6 +36,7 @@ RUN cd /opt/docker-registry \
 
 # make mongo directories
 RUN mkdir -p /data/db
+
 # mysql server setup
 RUN /usr/sbin/mysqld & \
     sleep 4s &&\

@@ -13,8 +13,6 @@ import (
 	//"fmt"
 	"net/http"
 	//"net/url"
-	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
 )
 
 //
@@ -243,28 +241,6 @@ func (d *DockerServer) StopContainer() (http.Response, error) {
 	return resp, nil
 }
 
-//
-// gets all the containers associated with a user
-//
-// NEED TO TEST 
-// ALSO NEED TO ENSURE IT DOES NOT RETURN THE ENTIRE DOCKERSERVER (bad)
-//
-func (d *DockerServer) GetAllUserContainers() ([]DockerServer, error) {
-	dockerFind := []DockerServer{}
-	session, err := mgo.Dial(MongoDBAddress)
-	if err != nil {
-		return dockerFind, err
-	}
-	defer session.Close()
-	session.SetMode(mgo.Monotonic, true)
-	c := session.DB(MongoDBName).C(MongoDeployCollection)
-	err = c.Find(bson.M{"user": d.User}).All(&dockerFind)
-	if err != nil {
-		return dockerFind, err
-	}
-	return dockerFind, nil
-}
-
 // these functions will probably be refactored and
 // thrown into a "docker_actions" file, or something
 // basically, these are actions/processes/logic, the above are commands
@@ -319,23 +295,6 @@ func (d *DockerServer) DeployNewContainer() (string, error) {
 		return "increment error", err
 	}
 	return "", nil
-}
-
-// for host, not docker really..
-// maybe make a host.go?
-func ListAllContainers(host Host) ([]ListContainerInfo, error) {
-	containers := []ListContainerInfo{}
-	command := "containers/json?all=1"
-	resp, err := SendDockerCommand(host, command, "GET", nil)
-	if err != nil {
-		return containers, err
-	}
-	decode := json.NewDecoder(resp.Body)
-	err = decode.Decode(&containers)
-	if err != nil {
-		return containers, err
-	}
-	return containers, nil
 }
 
 // refactor this. should return an http response

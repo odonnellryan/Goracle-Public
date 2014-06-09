@@ -7,6 +7,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
     build-essential \
 	bzr \
 	git \
+	mercurial\
 	--no-install-recommends
 
 # Install Go
@@ -21,6 +22,7 @@ RUN go get "labix.org/v2/mgo/bson"
 RUN go get "github.com/ziutek/mymysql/thrsafe"
 RUN go get "github.com/ziutek/mymysql/autorc"
 RUN go get "github.com/ziutek/mymysql/godrv"
+RUN go get "code.google.com/p/go.crypto/ssh"
 
 WORKDIR	/go/src/Goracle
 

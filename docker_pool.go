@@ -10,14 +10,6 @@ import (
 	//"strconv"
 )
 
-type Host struct {
-	Hostname   string
-	Address    string
-	User       string
-	Password   string
-	Containers int
-}
-
 type DockerHosts struct {
 	Host []Host
 }
@@ -49,7 +41,7 @@ func UpdateAllDockerHostsInMongo() error {
 // update all host entries in mongo to reflect their container count
 func UpdateTotalContainerNumber(d DockerHosts) error {
 	for index := range d.Host {
-		containers, err := ListAllContainers(d.Host[index])
+		containers, err := d.Host[index].ListAllContainers()
 		//fmt.Printf("containers: %+v", containers)
 		if err != nil {
 			return err
@@ -72,7 +64,7 @@ func UpdateTotalContainerNumber(d DockerHosts) error {
 
 // update a single host entry in mongo to reflect their container count
 func UpdateContainerNumberInHost(host Host) error {
-	containers, err := ListAllContainers(host)
+	containers, err := host.ListAllContainers()
 	if err != nil {
 		return err
 	}
