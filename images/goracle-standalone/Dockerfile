@@ -24,8 +24,11 @@ RUN apt-get install	-yq git
 RUN apt-get install	-yq net-tools
 RUN apt-get install	-yq iputils-ping
 RUN apt-get install	-yq arping
-
+RUN apt-get install	-yq curl
 RUN pip install mysql-python
+
+# install latest docker
+RUN curl -s https://get.docker.io/ubuntu/ | sh
 
 # registry stuff and generate docker login to local directory
 RUN cd /opt && git clone https://github.com/dotcloud/docker-registry.git \

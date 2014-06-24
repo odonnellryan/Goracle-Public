@@ -35,3 +35,5 @@ RUN /usr/sbin/mysqld & \
     echo "CREATE DATABASE users; GRANT ALL ON *.* TO 'root'@'localhost' IDENTIFIED BY '0okm9ijn' WITH GRANT OPTION; FLUSH PRIVILEGES;" | mysql && \
     python Neo/SoftLaunch/createtable.py
 
+EXPOSE 5000
+
